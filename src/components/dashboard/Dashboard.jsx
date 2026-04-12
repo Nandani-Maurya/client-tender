@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './Dashboard.css'
 import AddDetails from '../AddDetails/AddDetails'
+import FormatEditor from '../FormatEditor/FormatEditor'
 import Header from '../Header/Header'
 import Sidebar from '../Sidebar/Sidebar'
 import Footer from '../Footer/Footer'
@@ -20,7 +21,9 @@ function Dashboard({ onNavigate, user }) {
         <Header user={user} />
 
         <main className="dashboard-center">
-          {activeSection === 'addDetails' ? (
+          {activeSection === 'formatEditor' ? (
+            <FormatEditor />
+          ) : activeSection === 'addDetails' ? (
             <AddDetails />
           ) : (
             <div className="welcome-card">
