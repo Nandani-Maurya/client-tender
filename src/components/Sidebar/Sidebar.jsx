@@ -24,6 +24,13 @@ function Sidebar({ activeSection, onNavigate, onSectionChange }) {
         >
           Add Details
         </button>
+        <button
+          type="button"
+          className={`nav-item ${activeSection === 'formatEditor' ? 'active' : ''}`}
+          onClick={() => onSectionChange('formatEditor')}
+        >
+          Add Format
+        </button>
         <button type="button" className="nav-item">Tenders</button>
         <button type="button" className="nav-item">Documents</button>
         <button type="button" className="nav-item">Settings</button>
