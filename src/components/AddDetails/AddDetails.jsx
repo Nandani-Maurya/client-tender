@@ -1,11 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import alerts from '../../utils/alerts'
+import * as categoryService from '../../services/category.service'
+import * as projectTypeService from '../../services/projectType.service'
+import * as formatService from '../../services/format.service'
 import './AddDetails.css'
-
-const defaultProjectTypes = [
-  { id: 'pt-architectural', code: 'ARCH', label: 'Architectural' },
-  { id: 'pt-sewage', code: 'SEW', label: 'Sewage' },
-  { id: 'pt-waste-management', code: 'WM', label: 'Waste Management' }
-]
 
 const organisationFields = [
   { name: 'nameOfFirm', label: 'Name of Firm' },
@@ -154,10 +152,22 @@ const uploadFields = [
 
 function AddDetails() {
   const [activeTab, setActiveTab] = useState('technical')
-  const [activeTechnicalTab, setActiveTechnicalTab] = useState('projectTypes')
-  const [projectTypes, setProjectTypes] = useState(defaultProjectTypes)
+  const [activeTechnicalTab, setActiveTechnicalTab] = useState('tenderCategories')
+  
+  // Tender Categories State
+  const [tenderCategories, setTenderCategories] = useState([])
+  const [tenderCategoryMode, setTenderCategoryMode] = useState('list')
+  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({ 
+    category_name: '', 
+    category_description: '' 
+  })
+  const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null)
+
+  const [projectTypes, setProjectTypes] = useState([])
   const [projectTypeMode, setProjectTypeMode] = useState('list')
-  const [projectTypeDraft, setProjectTypeDraft] = useState('')
+  const [projectTypeDraft, setProjectTypeDraft] = useState({ 
+    type_name: ''
+  })
   const [editingProjectTypeId, setEditingProjectTypeId] = useState(null)
   const [organisationDraft, setOrganisationDraft] = useState(initialOrganisationDraft)
   const [savedOrganisationDetails, setSavedOrganisationDetails] = useState(null)
@@ -187,6 +197,115 @@ function AddDetails() {
   const [viewingProjectDocuments, setViewingProjectDocuments] = useState(null)
   const [additionalDocuments, setAdditionalDocuments] = useState([])
   const [documentTypeDraft, setDocumentTypeDraft] = useState('')
+
+  // Formats / Annexures State
+  const [formats, setFormats] = useState([])
+  const [viewingFormat, setViewingFormat] = useState(null)
+  const [currentFormatPage, setCurrentFormatPage] = useState(0)
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchTenderCategories()
+    fetchProjectTypes()
+    fetchFormats()
+  }, [])
+
+  const fetchFormats = async () => {
+    try {
+      const resp = await formatService.getFormats()
+      if (resp.success) {
+        setFormats(resp.data)
+      }
+    } catch (err) {
+      console.error('Failed to load formats', err)
+    }
+  }
+
+  const fetchProjectTypes = async () => {
+    try {
+      const resp = await projectTypeService.getProjectTypes()
+      if (resp.success) {
+        setProjectTypes(resp.data)
+      }
+    } catch (err) {
+      console.error('Failed to load project types', err)
+    }
+  }
+
+  const fetchTenderCategories = async () => {
+    try {
+      const resp = await categoryService.getTenderCategories()
+      if (resp.success) {
+        setTenderCategories(resp.data)
+      }
+    } catch (err) {
+      console.error('Failed to load categories', err)
+    }
+  }
+
+  const handleTenderCategoryDraftChange = (e) => {
+    const { name, value } = e.target
+    setTenderCategoryDraft(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSaveTenderCategory = async () => {
+    if (!tenderCategoryDraft.category_name.trim()) {
+      return alerts.error('Required', 'Category value is required')
+    }
+
+    const isEditing = !!editingTenderCategoryId
+    alerts.loading(isEditing ? 'Updating...' : 'Saving...', isEditing ? 'Updating tender category' : 'Adding new tender category')
+    
+    try {
+      let resp
+      if (isEditing) {
+        resp = await categoryService.updateTenderCategory(editingTenderCategoryId, tenderCategoryDraft)
+      } else {
+        resp = await categoryService.createTenderCategory(tenderCategoryDraft)
+      }
+
+      if (resp.success) {
+        if (isEditing) {
+          setTenderCategories(prev => prev.map(c => c.id === editingTenderCategoryId ? resp.data : c))
+        } else {
+          setTenderCategories(prev => [resp.data, ...prev])
+        }
+        
+        setTenderCategoryMode('list')
+        setTenderCategoryDraft({ category_name: '', category_description: '' })
+        setEditingTenderCategoryId(null)
+        alerts.success('Success', isEditing ? 'Category updated successfully' : 'Tender Category added successfully')
+      } else {
+        alerts.error('Error', resp.message)
+      }
+    } catch (err) {
+      alerts.error('Connection Error', `Failed to ${isEditing ? 'update' : 'save'} category`)
+    }
+  }
+
+  const handleEditTenderCategory = (cat) => {
+    setTenderCategoryDraft({
+      category_name: cat.category_name,
+      category_description: cat.category_description
+    })
+    setEditingTenderCategoryId(cat.id)
+    setTenderCategoryMode('form')
+  }
+
+  const handleDeleteTenderCategory = async (id) => {
+    const confirm = await alerts.confirm('Are you sure?', 'You want to delete this record?')
+    if (confirm.isConfirmed) {
+      try {
+        const resp = await categoryService.deleteTenderCategory(id)
+        if (resp.success) {
+          setTenderCategories(prev => prev.filter(c => c.id !== id))
+          alerts.success('Deleted', 'Category deleted successfully')
+        }
+      } catch (err) {
+        alerts.error('Error', 'Failed to delete category')
+      }
+    }
+  }
 
   const handleProjectChange = (event) => {
     const { name, value } = event.target
@@ -508,6 +627,107 @@ function AddDetails() {
     setViewingEmployee(employee)
   }
 
+  const handleTechnicalTabChange = (tabName) => {
+    // 1. Reset Modes (Always show Table/List first)
+    setTenderCategoryMode('list')
+    setProjectTypeMode('list')
+    setEmployeeMode('table')
+    setShowBankForm(false)
+    setShowProjectForm(false)
+    
+    // 2. Reset Selection/Edit states
+    setEditingTenderCategoryId(null)
+    setEditingProjectTypeId(null)
+    setEditingEmployeeId(null)
+    setEditingBankId(null)
+    setEditingProjectId(null)
+    setViewingEmployee(null)
+    setViewingBankDocuments(null)
+    setViewingProjectDocuments(null)
+
+    // 3. Clear/Reset Drafts (Clear input fields)
+    setTenderCategoryDraft({ category_name: '', category_description: '' })
+    setProjectTypeDraft('')
+    setOrganisationDraft(initialOrganisationDraft)
+    setBankDraft(initialBankDraft)
+    setProjectDraft(initialProjectDraft)
+    setEmployeeDraft(initialEmployeeDraft)
+    setIsoCertificateDraft(initialIsoCertificateDraft)
+    setBranchDraft(initialBranchDraft)
+    setContactDraft(initialContactDraft)
+    setPartnerDraft(initialPartnerDraft)
+    setQualificationDraft(initialQualificationDraft)
+    setDocumentTypeDraft('')
+    setViewingFormat(null)
+    setCurrentFormatPage(0)
+
+    // 4. Set Active Tab
+    setActiveTechnicalTab(tabName)
+  }
+
+  const handleProjectTypeDraftChange = (e) => {
+    const { name, value } = e.target
+    setProjectTypeDraft(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSaveProjectType = async () => {
+    if (!projectTypeDraft.type_name.trim()) {
+      return alerts.error('Required', 'Project type name is required')
+    }
+
+    const isEditing = !!editingProjectTypeId
+    alerts.loading(isEditing ? 'Updating...' : 'Saving...', isEditing ? 'Updating project type' : 'Adding project type')
+
+    try {
+      let resp
+      if (isEditing) {
+        resp = await projectTypeService.updateProjectType(editingProjectTypeId, projectTypeDraft)
+      } else {
+        resp = await projectTypeService.createProjectType(projectTypeDraft)
+      }
+
+      if (resp.success) {
+        if (isEditing) {
+          setProjectTypes(prev => prev.map(t => t.id === editingProjectTypeId ? resp.data : t))
+        } else {
+          setProjectTypes(prev => [...prev, resp.data])
+        }
+
+        setProjectTypeMode('list')
+        setProjectTypeDraft({ type_name: '', type_code: '' })
+        setEditingProjectTypeId(null)
+        alerts.success('Success', isEditing ? 'Project type updated' : 'Project type added')
+      } else {
+        alerts.error('Error', resp.message)
+      }
+    } catch (err) {
+      alerts.error('Error', 'API Connection failed')
+    }
+  }
+
+  const handleEditProjectType = (type) => {
+    setProjectTypeDraft({
+      type_name: type.type_name
+    })
+    setEditingProjectTypeId(type.id)
+    setProjectTypeMode('form')
+  }
+
+  const handleDeleteProjectType = async (id) => {
+    const confirm = await alerts.confirm('Are you sure?', 'You want to delete this record?')
+    if (confirm.isConfirmed) {
+      try {
+        const resp = await projectTypeService.deleteProjectType(id)
+        if (resp.success) {
+          setProjectTypes(prev => prev.filter(t => t.id !== id))
+          alerts.success('Deleted', 'Project type deleted successfully')
+        }
+      } catch (err) {
+        alerts.error('Error', 'Failed to delete')
+      }
+    }
+  }
+
   const handleEditEmployee = (employee) => {
     setEmployeeDraft(employee)
     setEditingEmployeeId(employee.id)
@@ -683,64 +903,16 @@ function AddDetails() {
     setShowProjectForm(false)
   }
 
-  const handleRemoveProject = (projectId) => {
-    setProjects((prev) => prev.filter((project) => project.id !== projectId))
-  }
-
   const openAddProjectType = () => {
-    setProjectTypeDraft('')
+    setProjectTypeDraft({ type_name: '' })
     setEditingProjectTypeId(null)
-    setProjectTypeMode('form')
-  }
-
-  const openEditProjectType = (projectType) => {
-    setProjectTypeDraft(projectType.label)
-    setEditingProjectTypeId(projectType.id)
     setProjectTypeMode('form')
   }
 
   const closeProjectTypeForm = () => {
-    setProjectTypeDraft('')
+    setProjectTypeDraft({ type_name: '' })
     setEditingProjectTypeId(null)
     setProjectTypeMode('list')
-  }
-
-  const handleSaveProjectType = () => {
-    const trimmedName = projectTypeDraft.trim()
-
-    if (!trimmedName) {
-      return
-    }
-
-    if (editingProjectTypeId) {
-      setProjectTypes((prev) => (
-        prev.map((type) => (
-          type.id === editingProjectTypeId
-            ? { ...type, label: trimmedName }
-            : type
-        ))
-      ))
-    } else {
-      const nextNumber = projectTypes.length + 1
-      setProjectTypes((prev) => [
-        ...prev,
-        {
-          id: `pt-custom-${Date.now()}`,
-          code: `PT${nextNumber}`,
-          label: trimmedName
-        }
-      ])
-    }
-
-    closeProjectTypeForm()
-  }
-
-  const handleDeleteProjectType = (projectTypeId) => {
-    setProjectTypes((prev) => prev.filter((type) => type.id !== projectTypeId))
-
-    if (projectDraft.projectTypeId === projectTypeId) {
-      setProjectDraft((prev) => ({ ...prev, projectTypeId: '' }))
-    }
   }
 
   return (
@@ -774,101 +946,231 @@ function AddDetails() {
           <div className="technical-subtabs">
             <button
               type="button"
+              className={`technical-subtab ${activeTechnicalTab === 'tenderCategories' ? 'active' : ''}`}
+              onClick={() => handleTechnicalTabChange('tenderCategories')}
+            >
+              Tender Categories
+            </button>
+            <button
+              type="button"
               className={`technical-subtab ${activeTechnicalTab === 'projectTypes' ? 'active' : ''}`}
-              onClick={openProjectTypesTab}
+              onClick={() => handleTechnicalTabChange('projectTypes')}
             >
               Project Types
             </button>
             <button
               type="button"
               className={`technical-subtab ${activeTechnicalTab === 'organisation' ? 'active' : ''}`}
-              onClick={() => setActiveTechnicalTab('organisation')}
+              onClick={() => handleTechnicalTabChange('organisation')}
             >
               Organization
             </button>
             <button
               type="button"
               className={`technical-subtab ${activeTechnicalTab === 'bank' ? 'active' : ''}`}
-              onClick={() => setActiveTechnicalTab('bank')}
+              onClick={() => handleTechnicalTabChange('bank')}
             >
               Bank Details
             </button>
             <button
               type="button"
               className={`technical-subtab ${activeTechnicalTab === 'projects' ? 'active' : ''}`}
-              onClick={() => setActiveTechnicalTab('projects')}
+              onClick={() => handleTechnicalTabChange('projects')}
             >
               Project Experience
             </button>
             <button
               type="button"
               className={`technical-subtab ${activeTechnicalTab === 'employees' ? 'active' : ''}`}
-              onClick={() => setActiveTechnicalTab('employees')}
+              onClick={() => handleTechnicalTabChange('employees')}
             >
               Employee Bio-data
             </button>
             <button
               type="button"
               className={`technical-subtab ${activeTechnicalTab === 'documents' ? 'active' : ''}`}
-              onClick={() => setActiveTechnicalTab('documents')}
+              onClick={() => handleTechnicalTabChange('documents')}
             >
               Documents
             </button>
+            <button
+              type="button"
+              className={`technical-subtab ${activeTechnicalTab === 'formats' ? 'active' : ''}`}
+              onClick={() => handleTechnicalTabChange('formats')}
+            >
+              Annexures / Formats
+            </button>
           </div>
+
+          {activeTechnicalTab === 'tenderCategories' && (
+            <FormSection title="Tender Category Management">
+              <p className="section-helper">
+                Identify tender category types (e.g. NIT, RFP, EOI). Short forms are saved as values, full forms as descriptions.
+              </p>
+
+              {tenderCategoryMode === 'list' ? (
+                <>
+                  <div className="section-actions">
+                    <button type="button" onClick={() => setTenderCategoryMode('form')}>
+                      + Add New Category
+                    </button>
+                  </div>
+
+                  <div className="project-type-table">
+                    <div className="tender-category-row table-heading">
+                      <span>Category Value</span>
+                      <span>Description</span>
+                      <span>Action</span>
+                    </div>
+
+                    {tenderCategories.length === 0 ? (
+                      <div className="empty-project-row">No categories found in system.</div>
+                    ) : (
+                      tenderCategories.map((cat) => (
+                        <div className="tender-category-row" key={cat.id}>
+                          <span className="bold-label">{cat.category_name}</span>
+                          <span>{cat.category_description || '-'}</span>
+                          <div className="row-actions">
+                            <button
+                              type="button"
+                              className="edit-row-btn"
+                              onClick={() => handleEditTenderCategory(cat)}
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              type="button" 
+                              className="delete-row-btn"
+                              onClick={() => handleDeleteTenderCategory(cat.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="premium-compact-form">
+                  <div className="details-grid">
+                    <label className="details-field">
+                      <span>Category Value (Short Form) *</span>
+                      <input
+                        type="text"
+                        name="category_name"
+                        value={tenderCategoryDraft.category_name}
+                        onChange={handleTenderCategoryDraftChange}
+                        placeholder="e.g. NIT"
+                        required
+                      />
+                    </label>
+                    <label className="details-field">
+                      <span>Full Description</span>
+                      <input
+                        type="text"
+                        name="category_description"
+                        value={tenderCategoryDraft.category_description}
+                        onChange={handleTenderCategoryDraftChange}
+                        placeholder="e.g. Notice Inviting Tender"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-submit-actions">
+                    <button type="button" onClick={handleSaveTenderCategory} className="save-btn">
+                      Save
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setTenderCategoryMode('list')
+                        setEditingTenderCategoryId(null)
+                        setTenderCategoryDraft({ category_name: '', category_description: '' })
+                      }} 
+                      className="cancel-btn"
+                    >
+                      Back to List
+                    </button>
+                  </div>
+                </div>
+              )}
+            </FormSection>
+          )}
 
           {activeTechnicalTab === 'projectTypes' && (
             <FormSection title="Project Type Setup">
               <p className="section-helper">
-                These project types will come from the database later. For now they are managed in this static UI.
+                Manage project specializations (e.g. Architectural, Civil). Code is used for internal reference.
               </p>
 
               {projectTypeMode === 'list' ? (
                 <>
                   <div className="section-actions">
                     <button type="button" onClick={openAddProjectType}>
-                      Add Project Type
+                      + Add Project Type
                     </button>
                   </div>
 
                   <div className="project-type-table">
-                    <div className="project-type-row table-heading">
-                      <span>Project Type Name</span>
+                    <div className="project-type-row-v2 table-heading">
+                      <span>Type Name</span>
                       <span>Action</span>
                     </div>
 
-                    {projectTypes.map((type) => (
-                      <div className="project-type-row" key={type.id}>
-                        <span>{type.label}</span>
-                        <div className="row-actions">
-                          <button type="button" onClick={() => openEditProjectType(type)}>
-                            Edit
-                          </button>
-                          <button type="button" onClick={() => handleDeleteProjectType(type.id)}>
-                            Delete
-                          </button>
+                    {projectTypes.length === 0 ? (
+                      <div className="empty-project-row">No project types found.</div>
+                    ) : (
+                      projectTypes.map((type) => (
+                        <div className="project-type-row-v2" key={type.id}>
+                          <span className="bold-label">{type.type_name}</span>
+                          <div className="row-actions">
+                            <button 
+                              type="button" 
+                              className="edit-row-btn"
+                              onClick={() => handleEditProjectType(type)}
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              type="button" 
+                              className="delete-row-btn"
+                              onClick={() => handleDeleteProjectType(type.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </>
               ) : (
-                <div className="project-type-form">
-                  <label className="details-field">
-                    <span>Project Type Name</span>
-                    <input
-                      type="text"
-                      value={projectTypeDraft}
-                      onChange={(event) => setProjectTypeDraft(event.target.value)}
-                      placeholder="Enter project type name"
-                    />
-                  </label>
+                <div className="premium-compact-form">
+                  <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
+                    <label className="details-field">
+                      <span>Type Name *</span>
+                      <input
+                        type="text"
+                        name="type_name"
+                        value={projectTypeDraft.type_name}
+                        onChange={handleProjectTypeDraftChange}
+                        placeholder="e.g. Architectural"
+                        required
+                      />
+                    </label>
+                  </div>
 
-                  <div className="project-type-form-actions">
-                    <button type="button" onClick={handleSaveProjectType}>
-                      {editingProjectTypeId ? 'Update' : 'Save'}
+                  <div className="form-submit-actions">
+                    <button type="button" onClick={handleSaveProjectType} className="save-btn">
+                      Save
                     </button>
-                    <button type="button" onClick={closeProjectTypeForm}>
-                      Cancel
+                    <button 
+                      type="button" 
+                      onClick={closeProjectTypeForm}
+                      className="cancel-btn"
+                    >
+                      Back to List
                     </button>
                   </div>
                 </div>
@@ -2063,6 +2365,97 @@ function AddDetails() {
               <div className="project-actions">
                 <button type="button">Upload All Documents</button>
               </div>
+            </FormSection>
+          )}
+
+          {activeTechnicalTab === 'formats' && (
+            <FormSection title="Official Annexures & Formats">
+              <p className="section-helper">
+                Standard document templates (Annexure 1-7). Select a format to view the official structure.
+              </p>
+
+              <div className="project-type-table">
+                <div className="project-type-row-v2 table-heading">
+                  <span>Format Name & Title</span>
+                  <span>Action</span>
+                </div>
+
+                {formats.length === 0 ? (
+                  <div className="empty-project-row">No formats found in database.</div>
+                ) : (
+                  formats.map((f) => (
+                    <div className="project-type-row-v2" key={f.id}>
+                      <div className="format-info-cell" style={{ padding: '12px 14px' }}>
+                        <div className="bold-label" style={{ fontWeight: '700', color: '#1c2748' }}>{f.format_name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                          {f.format_title}
+                        </div>
+                      </div>
+                      <div className="row-actions">
+                        <button 
+                          type="button" 
+                          className="edit-row-btn"
+                          style={{ background: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0', width: 'auto' }}
+                          onClick={() => setViewingFormat(f)}
+                        >
+                          View Template
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {viewingFormat && (
+                <div className="format-preview-overlay">
+                  <div className="format-preview-modal">
+                    <div className="preview-header">
+                      <div className="preview-header-info">
+                        <h3>{viewingFormat.format_name} - {viewingFormat.format_title}</h3>
+                        {viewingFormat.template_pages?.length > 1 && (
+                          <span className="page-indicator">Page {currentFormatPage + 1} of {viewingFormat.template_pages.length}</span>
+                        )}
+                      </div>
+                      <button className="close-preview" onClick={() => {
+                        setViewingFormat(null)
+                        setCurrentFormatPage(0)
+                      }}>×</button>
+                    </div>
+                    <div className="preview-content-scroll">
+                       <div 
+                         className="html-renderer-content" 
+                         dangerouslySetInnerHTML={{ __html: viewingFormat.template_pages?.[currentFormatPage] || viewingFormat.template_html }} 
+                       />
+                    </div>
+                    <div className="preview-footer">
+                        <div className="pagination-controls">
+                           {viewingFormat.template_pages?.length > 1 && (
+                             <>
+                               <button 
+                                 className="page-btn" 
+                                 disabled={currentFormatPage === 0}
+                                 onClick={() => setCurrentFormatPage(p => p - 1)}
+                               >
+                                 Previous Page
+                               </button>
+                               <button 
+                                 className="page-btn highlight" 
+                                 disabled={currentFormatPage === viewingFormat.template_pages.length - 1}
+                                 onClick={() => setCurrentFormatPage(p => p + 1)}
+                               >
+                                 Next Page
+                               </button>
+                             </>
+                           )}
+                        </div>
+                      <button type="button" onClick={() => {
+                        setViewingFormat(null)
+                        setCurrentFormatPage(0)
+                      }} className="cancel-btn">Close Annexure</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </FormSection>
           )}
         </form>

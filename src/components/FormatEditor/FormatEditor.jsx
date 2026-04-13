@@ -34,14 +34,14 @@ const quillFormats = [
 ]
 
 function FormatEditor() {
-  const [formatType, setFormatType]       = useState('EOI')
-  const [projectType, setProjectType]     = useState('Architectural')
-  const [tenderRef, setTenderRef]         = useState('')
-  const [formatTitle, setFormatTitle]     = useState('')
-  const [editorHtml, setEditorHtml]       = useState('')
-  const [savedFormats, setSavedFormats]   = useState([])
-  const [isProcessing, setIsProcessing]   = useState(false)
-  const [progress, setProgress]           = useState('')
+  const [formatType, setFormatType] = useState('EOI')
+  const [projectType, setProjectType] = useState('Architectural')
+  const [tenderRef, setTenderRef] = useState('')
+  const [formatTitle, setFormatTitle] = useState('')
+  const [editorHtml, setEditorHtml] = useState('')
+  const [savedFormats, setSavedFormats] = useState([])
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [progress, setProgress] = useState('')
   const [editingSource, setEditingSource] = useState(null)
 
   const handleSaveFormat = () => {

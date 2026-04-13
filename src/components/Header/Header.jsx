@@ -12,7 +12,7 @@ function Header({ user }) {
         <img src={defaultUser} alt="User profile" />
         <div>
           <strong>{user?.name || 'Guest User'}</strong>
-          <span>{user?.role || 'Visitor'}</span>
+          <span>{user?.roles?.[0] || user?.role || 'Visitor'}</span>
         </div>
       </div>
     </header>
