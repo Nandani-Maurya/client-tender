@@ -14,7 +14,10 @@
     "quill": "^2.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.6.0",
     "react-quill": "^2.0.0",
+    "sweetalert2": "^11.26.24",
+    "sweetalert2-react-content": "^5.1.2",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {

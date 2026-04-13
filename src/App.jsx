@@ -1,19 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import alerts from './utils/alerts'
 import Hero from './components/Hero/Hero'
 import Login from './components/Login/Login'
 import Signup from './components/Signup/Signup'
 import Dashboard from './components/dashboard/Dashboard'
+import { getUser, logout } from './utils/auth'
 import './App.css'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home')
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Guest User',
-    email: 'guest@portal.com',
-    role: 'Visitor'
-  })
+  const [currentUser, setCurrentUser] = useState(null)
 
-  const handleNavigate = (page, user = null) => {
+  // Load user from localStorage on initial render
+  useEffect(() => {
+    const savedUser = getUser()
+    if (savedUser) {
+      setCurrentUser(savedUser)
+      setCurrentPage('dashboard')
+    }
+  }, [])
+
+  const handleNavigate = async (page, user = null) => {
+    if (page === 'logout') {
+      const result = await alerts.confirm('Logout Confirmation', 'Are you sure you want to sign out?', 'Yes, Logout')
+
+      if (result.isConfirmed) {
+        logout()
+        setCurrentUser(null)
+        setCurrentPage('home')
+        alerts.success('Logged Out', 'You have been successfully signed out')
+      }
+      return
+    }
+
     if (user) {
       setCurrentUser(user)
     }
@@ -59,3 +78,6 @@ function App() {
 }
 
 export default App
+
+
+

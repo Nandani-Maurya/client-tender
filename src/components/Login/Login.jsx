@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import alerts from '../../utils/alerts'
+import { setToken, setUser } from '../../utils/auth'
+import { loginUser } from '../../services/auth.service'
 import './Login.css'
 
 function Login({ onNavigate }) {
@@ -6,21 +9,45 @@ function Login({ onNavigate }) {
     email: '',
     password: ''
   })
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    const userData = {
-      name: form.email ? form.email.split('@')[0] : 'User',
-      email: form.email || 'user@portal.com',
-      role: 'Client User'
+    if (loading) return
+
+    setLoading(true)
+    alerts.loading('Authenticating...', 'Verifying your identity')
+
+    try {
+      const data = await loginUser(form)
+
+      if (data.success) {
+        setToken(data.data.token)
+        setUser(data.data.user)
+        
+        await alerts.success('Login Successful', `Welcome back, ${data.data.user.name}!`)
+        onNavigate('dashboard', data.data.user)
+      } else {
+        // API returned success:false but no exception
+        alerts.error('Authentication Failed', data.message || 'Invalid email or password')
+      }
+    } catch (err) {
+      // Professional error handling
+      const errorMessage = err.message || 'Something went wrong'
+      if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('network')) {
+        alerts.error('Server Unreachable', 'Please check your internet connection or ensure the server is running.')
+      } else {
+        alerts.error('Authentication Failed', errorMessage)
+      }
+      console.error('Login error:', err)
+    } finally {
+      setLoading(false)
     }
-    setForm({ email: '', password: '' })
-    onNavigate('dashboard', userData)
   }
 
   return (
@@ -42,6 +69,7 @@ function Login({ onNavigate }) {
               onChange={handleChange}
               placeholder="name@example.com"
               required
+              disabled={loading}
             />
           </div>
 
@@ -55,11 +83,16 @@ function Login({ onNavigate }) {
               onChange={handleChange}
               placeholder="Enter your password"
               required
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="login-btn">
-            Sign In
+          <button 
+            type="submit" 
+            className={`login-btn ${loading ? 'btn-loading' : ''}`}
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : 'Sign In'}
           </button>
         </form>
 
@@ -69,7 +102,8 @@ function Login({ onNavigate }) {
             <button
               type="button"
               className="link-btn"
-              onClick={() => onNavigate('signup')}
+              onClick={() => !loading && onNavigate('signup')}
+              disabled={loading}
             >
               Create one here
             </button>
@@ -77,7 +111,8 @@ function Login({ onNavigate }) {
           <button
             type="button"
             className="back-btn"
-            onClick={() => onNavigate('home')}
+            onClick={() => !loading && onNavigate('home')}
+            disabled={loading}
           >
             &lt; Back to Home
           </button>

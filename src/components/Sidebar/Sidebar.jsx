@@ -31,6 +31,20 @@ function Sidebar({ activeSection, onNavigate, onSectionChange }) {
         >
           Add Format
         </button>
+        <button
+          type="button"
+          className={`nav-item ${activeSection === 'formatLinking' ? 'active' : ''}`}
+          onClick={() => onSectionChange('formatLinking')}
+        >
+          Format Linking
+        </button>
+        <button
+          type="button"
+          className={`nav-item ${activeSection === 'formatManagement' ? 'active' : ''}`}
+          onClick={() => onSectionChange('formatManagement')}
+        >
+          Annexures / Formats
+        </button>
         <button type="button" className="nav-item">Tenders</button>
         <button type="button" className="nav-item">Documents</button>
         <button type="button" className="nav-item">Settings</button>
@@ -39,7 +53,7 @@ function Sidebar({ activeSection, onNavigate, onSectionChange }) {
       <button
         type="button"
         className="sidebar-logout"
-        onClick={() => onNavigate('home')}
+        onClick={() => onNavigate('logout')}
       >
         Log Out
       </button>
