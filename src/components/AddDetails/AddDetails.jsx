@@ -3,6 +3,8 @@ import alerts from '../../utils/alerts'
 import * as categoryService from '../../services/category.service'
 import * as projectTypeService from '../../services/projectType.service'
 import * as formatService from '../../services/format.service'
+import { uploadDocument } from '../../services/document.service'
+import { saveOrganization, getActiveOrganization } from '../../services/organization.service'
 import './AddDetails.css'
 
 const organisationFields = [
@@ -16,8 +18,7 @@ const organisationFields = [
   { name: 'panCardNumber', label: 'PAN Card Number' },
   { name: 'gstRegistrationNumber', label: 'GST Registration Number' },
   { name: 'epfRegistrationNumber', label: 'EPF Registration Number' },
-  { name: 'esicRegistrationNumber', label: 'ESIC Registration Number' },
-  { name: 'udyamMsmeNumber', label: 'Udyam / MSME Number' }
+  { name: 'esicRegistrationNumber', label: 'ESIC Registration Number' }
 ]
 
 const initialOrganisationDraft = organisationFields.reduce((draft, field) => {
@@ -171,12 +172,9 @@ function AddDetails() {
   const [editingProjectTypeId, setEditingProjectTypeId] = useState(null)
   const [organisationDraft, setOrganisationDraft] = useState(initialOrganisationDraft)
   const [savedOrganisationDetails, setSavedOrganisationDetails] = useState(null)
-  const [branchDraft, setBranchDraft] = useState(initialBranchDraft)
-  const [branches, setBranches] = useState([])
-  const [contactDraft, setContactDraft] = useState(initialContactDraft)
-  const [contacts, setContacts] = useState([])
-  const [partnerDraft, setPartnerDraft] = useState(initialPartnerDraft)
-  const [partners, setPartners] = useState([])
+  const [branches, setBranches] = useState([{ ...initialBranchDraft, id: 'branch-1' }])
+  const [contacts, setContacts] = useState([{ ...initialContactDraft, id: 'contact-1' }])
+  const [partners, setPartners] = useState([{ ...initialPartnerDraft, id: 'partner-1' }])
   const [employeeDraft, setEmployeeDraft] = useState(initialEmployeeDraft)
   const [employees, setEmployees] = useState([])
   const [qualificationDraft, setQualificationDraft] = useState(initialQualificationDraft)
@@ -185,8 +183,7 @@ function AddDetails() {
   const [employeeMode, setEmployeeMode] = useState('table')
   const [projectDraft, setProjectDraft] = useState(initialProjectDraft)
   const [projects, setProjects] = useState([])
-  const [isoCertificateDraft, setIsoCertificateDraft] = useState(initialIsoCertificateDraft)
-  const [isoCertificates, setIsoCertificates] = useState([])
+  const [isoCertificates, setIsoCertificates] = useState([{ ...initialIsoCertificateDraft, id: 'iso-1' }])
   const [bankDraft, setBankDraft] = useState(initialBankDraft)
   const [banks, setBanks] = useState([])
   const [editingBankId, setEditingBankId] = useState(null)
@@ -203,14 +200,83 @@ function AddDetails() {
   const [viewingFormat, setViewingFormat] = useState(null)
   const [currentFormatPage, setCurrentFormatPage] = useState(0)
 
-  // Fetch on mount
+  // Is it in update mode?
+  const [isUpdateMode, setIsUpdateMode] = useState(false)
+  
   useEffect(() => {
     fetchTenderCategories()
     fetchProjectTypes()
     fetchFormats()
+    loadActiveOrganization()
   }, [])
 
-  const fetchFormats = async () => {
+  async function loadActiveOrganization() {
+    try {
+      const res = await getActiveOrganization();
+      if (res.success && res.data) {
+        setIsUpdateMode(true);
+        const org = res.data;
+        
+        setOrganisationDraft(prev => ({
+          ...prev,
+          nameOfFirm: org.name_of_firm || '',
+          registrationNumber: org.registration_number || '',
+          registrationDate: org.registration_date ? org.registration_date.split('T')[0] : '',
+          emailAddress: org.email_address || '',
+          webAddress: org.web_address || '',
+          yearOfEstablishment: org.year_of_establishment || '',
+          typeOfFirm: org.type_of_firm || '',
+          panCardNumber: org.pan_card_number || '',
+          gstRegistrationNumber: org.gst_registration_number || '',
+          epfRegistrationNumber: org.epf_registration_number || '',
+          esicRegistrationNumber: org.esic_registration_number || '',
+          headOfficeState: org.head_office_state || '',
+          headOfficeCity: org.head_office_city || '',
+          headOfficeFullAddress: org.head_office_full_address || ''
+        }));
+        
+        if (org.contacts && org.contacts.length > 0) setContacts(org.contacts.map((c, i) => ({ id: `contact-fetch-${Date.now()}-${i}`, ...c })));
+        if (org.branches && org.branches.length > 0) setBranches(org.branches.map((b, i) => ({ id: `branch-fetch-${Date.now()}-${i}`, branchName: b.branch_name, state: b.state, city: b.city, address: b.address })));
+        if (org.partners && org.partners.length > 0) setPartners(org.partners.map((p, i) => ({ id: `partner-fetch-${Date.now()}-${i}`, name: p.name, position: p.position, phoneNumber: p.phone, address: p.address, isAuthorized: p.is_authorized })));
+        
+        if (org.iso_certificates && org.iso_certificates.length > 0) {
+          setIsoCertificates(org.iso_certificates.map((iso, i) => ({
+             id: `iso-fetch-${Date.now()}-${i}`,
+             certificateType: iso.certificate_type,
+             year: iso.year,
+             firstImage: null, 
+             secondImage: null,
+             firstImagePreview: iso.first_image_url || '',
+             secondImagePreview: iso.second_image_url || '',
+             existingFirstDocId: iso.first_image_id,
+             existingSecondDocId: iso.second_image_id
+          })));
+        }
+
+        if (org.bank_details && org.bank_details.length > 0) {
+          setBanks(org.bank_details.map((bank, i) => ({
+            id: `bank-fetch-${Date.now()}-${i}`,
+            bankName: bank.bank_name || '',
+            branchName: bank.branch_name || '',
+            accountHolderName: bank.account_holder_name || '',
+            accountNumber: bank.account_number || '',
+            ifscCode: bank.ifsc_code || '',
+            micrCode: bank.micr_code || '',
+            accountType: bank.account_type || '',
+            upiId: bank.upi_id || '',
+            existingBankStatementId: bank.bank_statement_id,
+            existingPassbookId: bank.passbook_id,
+            bankStatementPreview: bank.bank_statement_url || '',
+            passbookPreview: bank.passbook_url || ''
+          })));
+        }
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  async function fetchFormats() {
     try {
       const resp = await formatService.getFormats()
       if (resp.success) {
@@ -221,7 +287,7 @@ function AddDetails() {
     }
   }
 
-  const fetchProjectTypes = async () => {
+  async function fetchProjectTypes() {
     try {
       const resp = await projectTypeService.getProjectTypes()
       if (resp.success) {
@@ -232,7 +298,7 @@ function AddDetails() {
     }
   }
 
-  const fetchTenderCategories = async () => {
+  async function fetchTenderCategories() {
     try {
       const resp = await categoryService.getTenderCategories()
       if (resp.success) {
@@ -307,125 +373,206 @@ function AddDetails() {
     }
   }
 
-  const handleProjectChange = (event) => {
+  // --- ISO Certificates (array of open forms) ---
+  const handleIsoCertificateInputChange = (index, event) => {
     const { name, value } = event.target
-    setProjectDraft((prev) => ({ ...prev, [name]: value }))
+    setIsoCertificates(prev => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], [name]: value }
+      return updated
+    })
   }
 
-  const handleBranchChange = (event) => {
-    const { name, value } = event.target
-    setBranchDraft((prev) => ({ ...prev, [name]: value }))
+  const handleIsoCertificateImageChange = (index, event, imageType) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setIsoCertificates(prev => {
+        const updated = [...prev]
+        if (imageType === 'first') {
+          updated[index] = { ...updated[index], firstImage: file, firstImageName: file.name, firstImagePreview: reader.result }
+        } else {
+          updated[index] = { ...updated[index], secondImage: file, secondImageName: file.name, secondImagePreview: reader.result }
+        }
+        return updated
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
-  const handleContactChange = (event) => {
-    const { name, value } = event.target
-    setContactDraft((prev) => ({ ...prev, [name]: value }))
+  const handleRemoveIsoCertificateImage = (index, imageType) => {
+    setIsoCertificates(prev => {
+      const updated = [...prev]
+      if (imageType === 'first') {
+        updated[index] = { ...updated[index], firstImage: null, firstImageName: '', firstImagePreview: '' }
+      } else {
+        updated[index] = { ...updated[index], secondImage: null, secondImageName: '', secondImagePreview: '' }
+      }
+      return updated
+    })
   }
 
-  const handlePartnerChange = (event) => {
+  const handleAddMoreIsoCertificate = () => {
+    setIsoCertificates(prev => [...prev, { ...initialIsoCertificateDraft, id: `iso-${Date.now()}` }])
+  }
+
+  const handleRemoveIsoCertificate = (id) => {
+    setIsoCertificates(prev => prev.filter(c => c.id !== id))
+  }
+
+  // --- Branches (array of open forms) ---
+  const handleBranchChange = (index, event) => {
+    const { name, value } = event.target
+    setBranches(prev => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], [name]: value }
+      return updated
+    })
+  }
+
+  const handleAddMoreBranch = () => {
+    setBranches(prev => [...prev, { ...initialBranchDraft, id: `branch-${Date.now()}` }])
+  }
+
+  const handleRemoveBranch = (id) => {
+    setBranches(prev => prev.filter(b => b.id !== id))
+  }
+
+  // --- Contacts (array of open forms) ---
+  const handleContactChange = (index, event) => {
+    const { name, value } = event.target
+    setContacts(prev => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], [name]: value }
+      return updated
+    })
+  }
+
+  const handleAddMoreContact = () => {
+    setContacts(prev => [...prev, { ...initialContactDraft, id: `contact-${Date.now()}` }])
+  }
+
+  const handleRemoveContact = (id) => {
+    setContacts(prev => prev.filter(c => c.id !== id))
+  }
+
+  // --- Partners (array of open forms) ---
+  const handlePartnerChange = (index, event) => {
     const { name, value, checked, type } = event.target
-    setPartnerDraft((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    setPartners(prev => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], [name]: type === 'checkbox' ? checked : value }
+      return updated
+    })
+  }
+
+  const handleAddMorePartner = () => {
+    setPartners(prev => [...prev, { ...initialPartnerDraft, id: `partner-${Date.now()}` }])
+  }
+
+  const handleRemovePartner = (id) => {
+    setPartners(prev => prev.filter(p => p.id !== id))
   }
 
   const handleOrganisationChange = (event) => {
     const { name, value } = event.target
-    setOrganisationDraft((prev) => ({
-      ...prev,
-      [name]: value
-    }))
+    setOrganisationDraft((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleIsoCertificateImageChange = (event, imageType) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (imageType === 'first') {
-          setIsoCertificateDraft((prev) => ({
-            ...prev,
-            firstImage: file,
-            firstImageName: file.name,
-            firstImagePreview: reader.result
-          }))
-        } else {
-          setIsoCertificateDraft((prev) => ({
-            ...prev,
-            secondImage: file,
-            secondImageName: file.name,
-            secondImagePreview: reader.result
-          }))
+  // Loading state for saving
+  const [isSavingOrg, setIsSavingOrg] = useState(false)
+
+  const handleSaveAllOrganizationDetails = async () => {
+    setIsSavingOrg(true)
+    try {
+      // Basic validation
+      const hasData = organisationFields.some(({ name }) => organisationDraft[name].trim())
+      if (!hasData) {
+        alerts.error('No Data', 'Please fill the organization details before saving.')
+        setIsSavingOrg(false)
+        return
+      }
+
+      alerts.info('Uploading...', 'Uploading documents and saving data please wait.')
+
+      const processedIso = []
+      // Sequential file upload for ISO certificates to avoid backend spike
+      for (const iso of isoCertificates) {
+        let firstDocId = null;
+        let secondDocId = null;
+
+        if (iso.firstImage) {
+          const up1 = await uploadDocument(iso.firstImage, 'ISO_CERTIFICATE_1')
+          if (up1.success) firstDocId = up1.data.id
+        }
+        if (iso.secondImage) {
+          const up2 = await uploadDocument(iso.secondImage, 'ISO_CERTIFICATE_2')
+          if (up2.success) secondDocId = up2.data.id
+        }
+
+        if (iso.certificateType || iso.year || firstDocId || secondDocId || iso.existingFirstDocId || iso.existingSecondDocId) {
+          processedIso.push({
+            certificate_type: iso.certificateType,
+            year: iso.year,
+            first_image_id: firstDocId || iso.existingFirstDocId || null,
+            second_image_id: secondDocId || iso.existingSecondDocId || null
+          })
         }
       }
-      reader.readAsDataURL(file)
+
+      // Cleanup ID/Draft UI properties properly sending arrays
+      const payload = {
+        name_of_firm: organisationDraft.nameOfFirm,
+        registration_number: organisationDraft.registrationNumber,
+        registration_date: organisationDraft.registrationDate,
+        email_address: organisationDraft.emailAddress,
+        web_address: organisationDraft.webAddress,
+        year_of_establishment: parseInt(organisationDraft.yearOfEstablishment, 10) || null,
+        type_of_firm: organisationDraft.typeOfFirm,
+        pan_card_number: organisationDraft.panCardNumber,
+        gst_registration_number: organisationDraft.gstRegistrationNumber,
+        epf_registration_number: organisationDraft.epfRegistrationNumber,
+        esic_registration_number: organisationDraft.esicRegistrationNumber,
+        head_office_state: organisationDraft.headOfficeState,
+        head_office_city: organisationDraft.headOfficeCity,
+        head_office_full_address: organisationDraft.headOfficeFullAddress,
+        contacts: contacts.filter(c => c.number.trim()).map(c => ({ type: c.type, number: c.number })),
+        branches: branches.filter(b => b.branchName.trim() || b.city.trim()).map(b => ({ branch_name: b.branchName, state: b.state, city: b.city, address: b.address })),
+        partners: partners.filter(p => p.name.trim()).map(p => ({ name: p.name, position: p.position, phone: p.phoneNumber, address: p.address, is_authorized: p.isAuthorized })),
+        iso_certificates: processedIso,
+        bank_details: banks.map(b => ({
+          bank_name: b.bankName,
+          branch_name: b.branchName,
+          account_holder_name: b.accountHolderName,
+          account_number: b.accountNumber,
+          ifsc_code: b.ifscCode,
+          micr_code: b.micrCode,
+          account_type: b.accountType,
+          upi_id: b.upiId,
+          bank_statement_id: b.existingBankStatementId || null, // Note: We should ideally upload new docs here too if they changed
+          passbook_id: b.existingPassbookId || null
+        }))
+      }
+
+      const res = await saveOrganization(payload)
+      if (res.success) {
+        alerts.success('Success', res.message)
+        setIsUpdateMode(true)
+      } else {
+        alerts.error('Failed', res.message || 'Error occurred while saving organization')
+      }
+
+    } catch (err) {
+      console.error(err)
+      alerts.error('Error', 'An unexpected error occurred.')
+    } finally {
+      setIsSavingOrg(false)
     }
-  }
-
-  const handleRemoveIsoCertificateImage = (imageType) => {
-    if (imageType === 'first') {
-      setIsoCertificateDraft((prev) => ({
-        ...prev,
-        firstImage: null,
-        firstImageName: '',
-        firstImagePreview: ''
-      }))
-    } else {
-      setIsoCertificateDraft((prev) => ({
-        ...prev,
-        secondImage: null,
-        secondImageName: '',
-        secondImagePreview: ''
-      }))
-    }
-  }
-
-  const handleSaveOrganisation = () => {
-    const hasData = organisationFields.some(({ name }) => organisationDraft[name].trim())
-
-    if (!hasData) {
-      return
-    }
-
-    setSavedOrganisationDetails({
-      ...organisationDraft
-    })
   }
 
   const handleClearOrganisation = () => {
     setOrganisationDraft(initialOrganisationDraft)
-  }
-
-  const handleIsoCertificateInputChange = (event) => {
-    const { name, value } = event.target
-    setIsoCertificateDraft((prev) => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleAddIsoCertificate = () => {
-    if (!isoCertificateDraft.certificateType.trim() || !isoCertificateDraft.year.trim()) {
-      return
-    }
-
-    setIsoCertificates((prev) => [
-      ...prev,
-      {
-        id: `iso-cert-${prev.length + 1}`,
-        ...isoCertificateDraft
-      }
-    ])
-    setIsoCertificateDraft(initialIsoCertificateDraft)
-  }
-
-  const handleClearIsoCertificateDraft = () => {
-    setIsoCertificateDraft(initialIsoCertificateDraft)
-  }
-
-  const handleRemoveIsoCertificate = (certId) => {
-    setIsoCertificates((prev) => prev.filter((cert) => cert.id !== certId))
   }
 
   const handleBankChange = (event) => {
@@ -537,42 +684,21 @@ function AddDetails() {
     setBanks((prev) => prev.filter((bank) => bank.id !== bankId))
   }
 
-  const handleAddBranch = () => {
-    if (!branchDraft.branchName.trim() || !branchDraft.address.trim()) {
-      return
-    }
 
-    setBranches((prev) => [
+  const handleProjectChange = (event) => {
+    const { name, value } = event.target
+    setProjectDraft((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleRemoveProject = (projectId) => {
+    setProjects((prev) => prev.filter((p) => p.id !== projectId))
+  }
+
+  const handleRemoveQualification = (qualId) => {
+    setEmployeeDraft((prev) => ({
       ...prev,
-      {
-        id: `branch-${prev.length + 1}`,
-        ...branchDraft
-      }
-    ])
-    setBranchDraft(initialBranchDraft)
-  }
-
-  const handleClearBranch = () => {
-    setBranchDraft(initialBranchDraft)
-  }
-
-  const handleAddContact = () => {
-    if (!contactDraft.number.trim()) {
-      return
-    }
-
-    setContacts((prev) => [
-      ...prev,
-      {
-        id: `contact-${prev.length + 1}`,
-        ...contactDraft
-      }
-    ])
-    setContactDraft(initialContactDraft)
-  }
-
-  const handleClearContact = () => {
-    setContactDraft(initialContactDraft)
+      qualifications: prev.qualifications.filter(q => q.id !== qualId)
+    }))
   }
 
   const handleEmployeeChange = (event) => {
@@ -647,15 +773,11 @@ function AddDetails() {
 
     // 3. Clear/Reset Drafts (Clear input fields)
     setTenderCategoryDraft({ category_name: '', category_description: '' })
-    setProjectTypeDraft('')
-    setOrganisationDraft(initialOrganisationDraft)
+    setProjectTypeDraft({ type_name: '' })
+    // setOrganisationDraft(initialOrganisationDraft) - STOP CLEARING THIS
     setBankDraft(initialBankDraft)
     setProjectDraft(initialProjectDraft)
     setEmployeeDraft(initialEmployeeDraft)
-    setIsoCertificateDraft(initialIsoCertificateDraft)
-    setBranchDraft(initialBranchDraft)
-    setContactDraft(initialContactDraft)
-    setPartnerDraft(initialPartnerDraft)
     setQualificationDraft(initialQualificationDraft)
     setDocumentTypeDraft('')
     setViewingFormat(null)
@@ -778,20 +900,7 @@ function AddDetails() {
     setAdditionalDocuments((prev) => prev.filter(doc => doc.id !== docId))
   }
 
-  const handleAddPartner = () => {
-    if (!partnerDraft.name.trim() || !partnerDraft.position.trim()) {
-      return
-    }
 
-    setPartners((prev) => [
-      ...prev,
-      {
-        id: `partner-${prev.length + 1}`,
-        ...partnerDraft
-      }
-    ])
-    setPartnerDraft(initialPartnerDraft)
-  }
 
   const openProjectTypesTab = () => {
     setProjectTypeMode('list')
@@ -1185,7 +1294,7 @@ function AddDetails() {
                   <label className="details-field" key={name}>
                     <span>{label}</span>
                     <input
-                      type="text"
+                      type={name === 'registrationDate' ? 'date' : (name.includes('year') || name.includes('Year')) ? 'number' : 'text'}
                       name={name}
                       value={organisationDraft[name]}
                       onChange={handleOrganisationChange}
@@ -1195,413 +1304,257 @@ function AddDetails() {
                 ))}
               </div>
 
-              <div className="organization-actions">
-                <button type="button" onClick={handleSaveOrganisation}>
-                  Save Organization Details
-                </button>
-                <button type="button" className="cancel-btn" onClick={handleClearOrganisation}>
-                  Clear
-                </button>
-              </div>
-
-              {savedOrganisationDetails && (
-                <div className="organisation-summary">
-                  <h4>Saved Organization Details</h4>
-                  <div className="organisation-summary-table">
-                    <div className="organisation-summary-row table-heading">
-                      <span>Field</span>
-                      <span>Value</span>
-                    </div>
-                    {organisationFields.map(({ name, label }) => (
-                      <div className="organisation-summary-row" key={name}>
-                        <span>{label}</span>
-                        <span>{savedOrganisationDetails[name] || '-'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
+              {/* ---- ISO Certificates ---- */}
               <div className="office-block">
                 <h4>ISO Certificate Details</h4>
-                <p className="section-helper">
-                  Add one ISO certificate per row. Different years can be saved separately.
-                </p>
-                
-                <div className="iso-cert-entry-form">
-                  <label className="details-field">
-                    <span>Certificate Type</span>
-                    <input
-                      type="text"
-                      name="certificateType"
-                      value={isoCertificateDraft.certificateType}
-                      onChange={handleIsoCertificateInputChange}
-                      placeholder="e.g., ISO 9001, ISO 27001, ISO 45001"
-                    />
-                  </label>
-                  <label className="details-field">
-                    <span>Year of Certification</span>
-                    <input
-                      type="number"
-                      name="year"
-                      value={isoCertificateDraft.year}
-                      onChange={handleIsoCertificateInputChange}
-                      placeholder="e.g., 2024"
-                      min="1990"
-                      max={new Date().getFullYear()}
-                    />
-                  </label>
-                </div>
 
-                <div className="iso-certificate-upload">
-                  <div className="iso-image-section">
-                    <h5>First Certificate Image</h5>
-                    {isoCertificateDraft.firstImagePreview ? (
-                      <div className="image-preview-container">
-                        <img src={isoCertificateDraft.firstImagePreview} alt="First ISO Certificate" className="image-preview" />
-                        <button
-                          type="button"
-                          className="remove-image-btn"
-                          onClick={() => handleRemoveIsoCertificateImage('first')}
-                        >
-                          Remove
+                {isoCertificates.map((cert, idx) => (
+                  <div className="multi-form-entry" key={cert.id}>
+                    <div className="multi-form-header">
+                      <span>ISO Certificate #{idx + 1}</span>
+                      {isoCertificates.length > 1 && (
+                        <button type="button" className="delete-entry-btn" onClick={() => handleRemoveIsoCertificate(cert.id)}>
+                          ✕ Delete this form
                         </button>
-                      </div>
-                    ) : (
-                      <label className="image-upload-field">
-                        <span>📸 Click to upload certificate image</span>
-                        <input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => handleIsoCertificateImageChange(e, 'first')}
-                        />
-                      </label>
-                    )}
-                  </div>
-
-                  <div className="iso-image-section">
-                    <h5>Second Certificate Image (Optional)</h5>
-                    {isoCertificateDraft.secondImagePreview ? (
-                      <div className="image-preview-container">
-                        <img src={isoCertificateDraft.secondImagePreview} alt="Second ISO Certificate" className="image-preview" />
-                        <button
-                          type="button"
-                          className="remove-image-btn"
-                          onClick={() => handleRemoveIsoCertificateImage('second')}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="image-upload-field">
-                        <span>📸 Click to upload certificate image</span>
-                        <input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          onChange={(e) => handleIsoCertificateImageChange(e, 'second')}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                <div className="iso-actions">
-                  <button type="button" onClick={handleAddIsoCertificate}>
-                    Save ISO Certificate
-                  </button>
-                  <button type="button" className="cancel-btn" onClick={handleClearIsoCertificateDraft}>
-                    Clear
-                  </button>
-                </div>
-
-                <div className="iso-cert-table">
-                  <div className="iso-cert-row table-heading">
-                    <span>Type</span>
-                    <span>Year</span>
-                    <span>First Image</span>
-                    <span>Second Image</span>
-                    <span>Action</span>
-                  </div>
-
-                  {isoCertificates.length === 0 ? (
-                    <div className="iso-cert-row empty-cert-row">
-                      <span>No ISO certificate added yet.</span>
+                      )}
                     </div>
-                  ) : (
-                    isoCertificates.map((cert) => (
-                      <div className="iso-cert-row" key={cert.id}>
-                        <span>{cert.certificateType}</span>
-                        <span>{cert.year || '-'}</span>
-                        <span>
-                          {cert.firstImageName ? (
-                            <div className="iso-file-chip" title={cert.firstImageName}>
-                              {cert.firstImageName}
-                            </div>
-                          ) : (
-                            'Not added'
-                          )}
-                        </span>
-                        <span>
-                          {cert.secondImageName ? (
-                            <div className="iso-file-chip" title={cert.secondImageName}>
-                              {cert.secondImageName}
-                            </div>
-                          ) : (
-                            'Optional'
-                          )}
-                        </span>
-                        <button
-                          type="button"
-                          className="delete-cert-btn"
-                          onClick={() => handleRemoveIsoCertificate(cert.id)}
-                        >
-                          Delete
-                        </button>
+                    <div className="iso-cert-entry-form">
+                      <label className="details-field">
+                        <span>Certificate Type</span>
+                        <input
+                          type="text"
+                          name="certificateType"
+                          value={cert.certificateType}
+                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
+                          placeholder="e.g., ISO 9001, ISO 27001, ISO 45001"
+                        />
+                      </label>
+                      <label className="details-field">
+                        <span>Year of Certification</span>
+                        <input
+                          type="number"
+                          name="year"
+                          value={cert.year}
+                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
+                          placeholder="e.g., 2024"
+                          min="1990"
+                          max={new Date().getFullYear()}
+                        />
+                      </label>
+                    </div>
+                    <div className="iso-certificate-upload">
+                      <div className="iso-image-section">
+                        <h5>First Certificate Image</h5>
+                        {cert.firstImagePreview ? (
+                          <div className="image-preview-container">
+                            <img src={cert.firstImagePreview} alt="ISO Cert 1" className="image-preview" />
+                            <button type="button" className="remove-image-btn" onClick={() => handleRemoveIsoCertificateImage(idx, 'first')}>Remove</button>
+                          </div>
+                        ) : (
+                          <label className="image-upload-field">
+                            <span>📸 Upload certificate image</span>
+                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => handleIsoCertificateImageChange(idx, e, 'first')} />
+                          </label>
+                        )}
                       </div>
-                    ))
-                  )}
-                </div>
+                      <div className="iso-image-section">
+                        <h5>Second Certificate Image (Optional)</h5>
+                        {cert.secondImagePreview ? (
+                          <div className="image-preview-container">
+                            <img src={cert.secondImagePreview} alt="ISO Cert 2" className="image-preview" />
+                            <button type="button" className="remove-image-btn" onClick={() => handleRemoveIsoCertificateImage(idx, 'second')}>Remove</button>
+                          </div>
+                        ) : (
+                          <label className="image-upload-field">
+                            <span>📸 Upload certificate image</span>
+                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => handleIsoCertificateImageChange(idx, e, 'second')} />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button type="button" className="add-more-section-btn" onClick={handleAddMoreIsoCertificate}>
+                  + Add More ISO Certificate
+                </button>
               </div>
 
+              {/* ---- Contact Numbers ---- */}
               <div className="office-block">
                 <h4>Telephone / Mobile Numbers</h4>
-                <div className="contact-entry-form">
-                  <label className="details-field">
-                    <span>Contact Type</span>
-                    <select
-                      name="type"
-                      value={contactDraft.type}
-                      onChange={handleContactChange}
-                    >
-                      <option value="Telephone">Telephone</option>
-                      <option value="Mobile">Mobile</option>
-                      <option value="Alternate Mobile">Alternate Mobile</option>
-                    </select>
-                  </label>
-                  <label className="details-field">
-                    <span>Number</span>
-                    <input
-                      type="text"
-                      name="number"
-                      value={contactDraft.number}
-                      onChange={handleContactChange}
-                      placeholder="Enter phone number"
-                    />
-                  </label>
-                </div>
 
-                <div className="project-actions">
-                  <button type="button" onClick={handleAddContact}>
-                    Add Number
-                  </button>
-                  <button type="button" className="cancel-btn" onClick={handleClearContact}>
-                    Clear
-                  </button>
-                </div>
-
-                <div className="simple-table">
-                  <div className="simple-row table-heading">
-                    <span>Type</span>
-                    <span>Number</span>
+                {contacts.map((contact, idx) => (
+                  <div className="multi-form-entry" key={contact.id}>
+                    <div className="multi-form-header">
+                      <span>Contact #{idx + 1}</span>
+                      {contacts.length > 1 && (
+                        <button type="button" className="delete-entry-btn" onClick={() => handleRemoveContact(contact.id)}>
+                          ✕ Delete this form
+                        </button>
+                      )}
+                    </div>
+                    <div className="contact-entry-form">
+                      <label className="details-field">
+                        <span>Contact Type</span>
+                        <select name="type" value={contact.type} onChange={(e) => handleContactChange(idx, e)}>
+                          <option value="Telephone">Telephone</option>
+                          <option value="Mobile">Mobile</option>
+                          <option value="Alternate Mobile">Alternate Mobile</option>
+                        </select>
+                      </label>
+                      <label className="details-field">
+                        <span>Number</span>
+                        <input
+                          type="text"
+                          name="number"
+                          value={contact.number}
+                          onChange={(e) => handleContactChange(idx, e)}
+                          placeholder="Enter phone number"
+                        />
+                      </label>
+                    </div>
                   </div>
-
-                  {contacts.length === 0 ? (
-                    <div className="empty-project-row">No phone number added yet.</div>
-                  ) : (
-                    contacts.map((contact) => (
-                      <div className="simple-row" key={contact.id}>
-                        <span>{contact.type}</span>
-                        <span>{contact.number}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                ))}
+                <button type="button" className="add-more-section-btn" onClick={handleAddMoreContact}>
+                  + Add More Number
+                </button>
               </div>
 
+              {/* ---- Head Office ---- */}
               <div className="office-block">
                 <h4>Head Office Details</h4>
                 <div className="details-grid">
                   <label className="details-field">
                     <span>Head Office State</span>
-                    <input type="text" placeholder="Enter state" />
+                    <input 
+                      type="text" 
+                      name="headOfficeState"
+                      placeholder="Enter state" 
+                      value={organisationDraft.headOfficeState || ''}
+                      onChange={handleOrganisationChange}
+                    />
                   </label>
                   <label className="details-field">
                     <span>Head Office City</span>
-                    <input type="text" placeholder="Enter city" />
+                    <input 
+                      type="text" 
+                      name="headOfficeCity"
+                      placeholder="Enter city" 
+                      value={organisationDraft.headOfficeCity || ''}
+                      onChange={handleOrganisationChange}
+                    />
                   </label>
                   <label className="details-field full-field">
                     <span>Head Office Full Address</span>
-                    <input type="text" placeholder="Enter full address" />
+                    <input 
+                      type="text" 
+                      name="headOfficeFullAddress"
+                      placeholder="Enter full address" 
+                      value={organisationDraft.headOfficeFullAddress || ''}
+                      onChange={handleOrganisationChange}
+                    />
                   </label>
                 </div>
               </div>
 
+              {/* ---- Branch Offices ---- */}
               <div className="office-block">
                 <h4>Branch Office Details</h4>
-                <div className="branch-entry-form">
-                  <label className="details-field">
-                    <span>Branch Name / Location</span>
-                    <input
-                      type="text"
-                      name="branchName"
-                      value={branchDraft.branchName}
-                      onChange={handleBranchChange}
-                      placeholder="Example: Madhya Pradesh Branch"
-                    />
-                  </label>
-                  <label className="details-field">
-                    <span>State</span>
-                    <input
-                      type="text"
-                      name="state"
-                      value={branchDraft.state}
-                      onChange={handleBranchChange}
-                      placeholder="Example: Madhya Pradesh"
-                    />
-                  </label>
-                  <label className="details-field">
-                    <span>City</span>
-                    <input
-                      type="text"
-                      name="city"
-                      value={branchDraft.city}
-                      onChange={handleBranchChange}
-                      placeholder="Enter city"
-                    />
-                  </label>
-                  <label className="details-field full-field">
-                    <span>Branch Full Address</span>
-                    <input
-                      type="text"
-                      name="address"
-                      value={branchDraft.address}
-                      onChange={handleBranchChange}
-                      placeholder="Enter complete branch address"
-                    />
-                  </label>
-                </div>
 
-                <div className="project-actions">
-                  <button type="button" onClick={handleAddBranch}>
-                    Add Branch
-                  </button>
-                  <button type="button" className="cancel-btn" onClick={handleClearBranch}>
-                    Clear
-                  </button>
-                </div>
-
-                <div className="branch-table">
-                  <div className="branch-row table-heading">
-                    <span>Branch</span>
-                    <span>State</span>
-                    <span>City</span>
-                    <span>Address</span>
+                {branches.map((branch, idx) => (
+                  <div className="multi-form-entry" key={branch.id}>
+                    <div className="multi-form-header">
+                      <span>Branch #{idx + 1}</span>
+                      {branches.length > 1 && (
+                        <button type="button" className="delete-entry-btn" onClick={() => handleRemoveBranch(branch.id)}>
+                          ✕ Delete this form
+                        </button>
+                      )}
+                    </div>
+                    <div className="branch-entry-form">
+                      <label className="details-field">
+                        <span>Branch Name / Location</span>
+                        <input type="text" name="branchName" value={branch.branchName} onChange={(e) => handleBranchChange(idx, e)} placeholder="e.g., Madhya Pradesh Branch" />
+                      </label>
+                      <label className="details-field">
+                        <span>State</span>
+                        <input type="text" name="state" value={branch.state} onChange={(e) => handleBranchChange(idx, e)} placeholder="e.g., Madhya Pradesh" />
+                      </label>
+                      <label className="details-field">
+                        <span>City</span>
+                        <input type="text" name="city" value={branch.city} onChange={(e) => handleBranchChange(idx, e)} placeholder="Enter city" />
+                      </label>
+                      <label className="details-field full-field">
+                        <span>Branch Full Address</span>
+                        <input type="text" name="address" value={branch.address} onChange={(e) => handleBranchChange(idx, e)} placeholder="Enter complete branch address" />
+                      </label>
+                    </div>
                   </div>
-
-                  {branches.length === 0 ? (
-                    <div className="empty-project-row">No branch added yet.</div>
-                  ) : (
-                    branches.map((branch) => (
-                      <div className="branch-row" key={branch.id}>
-                        <span>{branch.branchName}</span>
-                        <span>{branch.state || '-'}</span>
-                        <span>{branch.city || '-'}</span>
-                        <span>{branch.address}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                ))}
+                <button type="button" className="add-more-section-btn" onClick={handleAddMoreBranch}>
+                  + Add More Branch
+                </button>
               </div>
 
+              {/* ---- Partners / Directors ---- */}
               <div className="office-block">
                 <h4>Partners / Directors</h4>
-                <div className="partner-entry-form">
-                  <label className="details-field">
-                    <span>Name</span>
-                    <input
-                      type="text"
-                      name="name"
-                      value={partnerDraft.name}
-                      onChange={handlePartnerChange}
-                      placeholder="Enter partner/director name"
-                    />
-                  </label>
-                  <label className="details-field">
-                    <span>Position</span>
-                    <input
-                      type="text"
-                      name="position"
-                      value={partnerDraft.position}
-                      onChange={handlePartnerChange}
-                      placeholder="Enter position"
-                    />
-                  </label>
-                  <label className="details-field">
-                    <span>Phone Number</span>
-                    <input
-                      type="text"
-                      name="phoneNumber"
-                      value={partnerDraft.phoneNumber}
-                      onChange={handlePartnerChange}
-                      placeholder="Enter phone number"
-                    />
-                  </label>
-                  <label className="details-field full-field">
-                    <span>Address</span>
-                    <input
-                      type="text"
-                      name="address"
-                      value={partnerDraft.address}
-                      onChange={handlePartnerChange}
-                      placeholder="Enter address"
-                    />
-                  </label>
-                  <label className="check-field">
-                    <input
-                      type="checkbox"
-                      name="isAuthorized"
-                      checked={partnerDraft.isAuthorized}
-                      onChange={handlePartnerChange}
-                    />
-                    <span>Authorized person</span>
-                  </label>
-                </div>
 
-                <div className="project-actions">
-                  <button type="button" onClick={handleAddPartner}>
-                    Add Partner
-                  </button>
-                  <button type="button" className="cancel-btn" onClick={() => setPartnerDraft(initialPartnerDraft)}>
-                    Clear
-                  </button>
-                </div>
-
-                <div className="partner-table">
-                  <div className="partner-row table-heading">
-                    <span>Name</span>
-                    <span>Position</span>
-                    <span>Phone</span>
-                    <span>Address</span>
-                    <span>Authorized</span>
+                {partners.map((partner, idx) => (
+                  <div className="multi-form-entry" key={partner.id}>
+                    <div className="multi-form-header">
+                      <span>Partner / Director #{idx + 1}</span>
+                      {partners.length > 1 && (
+                        <button type="button" className="delete-entry-btn" onClick={() => handleRemovePartner(partner.id)}>
+                          ✕ Delete this form
+                        </button>
+                      )}
+                    </div>
+                    <div className="partner-entry-form">
+                      <label className="details-field">
+                        <span>Name</span>
+                        <input type="text" name="name" value={partner.name} onChange={(e) => handlePartnerChange(idx, e)} placeholder="Enter partner/director name" />
+                      </label>
+                      <label className="details-field">
+                        <span>Position</span>
+                        <input type="text" name="position" value={partner.position} onChange={(e) => handlePartnerChange(idx, e)} placeholder="Enter position" />
+                      </label>
+                      <label className="details-field">
+                        <span>Phone Number</span>
+                        <input type="text" name="phoneNumber" value={partner.phoneNumber} onChange={(e) => handlePartnerChange(idx, e)} placeholder="Enter phone number" />
+                      </label>
+                      <label className="details-field full-field">
+                        <span>Address</span>
+                        <input type="text" name="address" value={partner.address} onChange={(e) => handlePartnerChange(idx, e)} placeholder="Enter address" />
+                      </label>
+                      <label className="check-field">
+                        <input type="checkbox" name="isAuthorized" checked={partner.isAuthorized} onChange={(e) => handlePartnerChange(idx, e)} />
+                        <span>Authorized person</span>
+                      </label>
+                    </div>
                   </div>
-
-                  {partners.length === 0 ? (
-                    <div className="empty-project-row">No partner/director added yet.</div>
-                  ) : (
-                    partners.map((partner) => (
-                      <div className="partner-row" key={partner.id}>
-                        <span>{partner.name}</span>
-                        <span>{partner.position}</span>
-                        <span>{partner.phoneNumber || '-'}</span>
-                        <span>{partner.address || '-'}</span>
-                        <span>{partner.isAuthorized ? 'Yes' : 'No'}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                ))}
+                <button type="button" className="add-more-section-btn" onClick={handleAddMorePartner}>
+                  + Add More Partner / Director
+                </button>
               </div>
+
+              {/* ---- Single Save All Button ---- */}
+              <div className="save-all-section">
+                <button
+                  type="button"
+                  className="save-all-org-btn"
+                  onClick={handleSaveAllOrganizationDetails}
+                  disabled={isSavingOrg}
+                >
+                  {isSavingOrg ? '⏳ UPDATING...' : (isUpdateMode ? '📝 UPDATE ALL ORGANIZATION DETAILS' : '💾 SAVE ALL ORGANIZATION DETAILS')}
+                </button>
+              </div>
+
             </FormSection>
           )}
+
+
 
           {activeTechnicalTab === 'bank' && (
             <FormSection title="Bank Details">
