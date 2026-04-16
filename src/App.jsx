@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import alerts from './utils/alerts'
 import Hero from './components/Hero/Hero'
 import Login from './components/Login/Login'
@@ -8,17 +8,9 @@ import { getUser, logout } from './utils/auth'
 import './App.css'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home')
-  const [currentUser, setCurrentUser] = useState(null)
-
-  // Load user from localStorage on initial render
-  useEffect(() => {
-    const savedUser = getUser()
-    if (savedUser) {
-      setCurrentUser(savedUser)
-      setCurrentPage('dashboard')
-    }
-  }, [])
+  const initialUser = getUser()
+  const [currentPage, setCurrentPage] = useState(initialUser ? 'dashboard' : 'home')
+  const [currentUser, setCurrentUser] = useState(initialUser)
 
   const handleNavigate = async (page, user = null) => {
     if (page === 'logout') {

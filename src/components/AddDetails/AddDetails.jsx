@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import alerts from '../../utils/alerts'
 import * as categoryService from '../../services/category.service'
 import * as projectTypeService from '../../services/projectType.service'
-import * as formatService from '../../services/format.service'
 import { uploadDocument } from '../../services/document.service'
 import { saveOrganization, getActiveOrganization } from '../../services/organization.service'
 import './AddDetails.css'
@@ -56,17 +55,6 @@ const initialIsoCertificateDraft = {
   secondImageName: '',
   secondImagePreview: ''
 }
-
-const bankFields = [
-  'Bank Name',
-  'Branch Name',
-  'Account Holder Name',
-  'Account Number',
-  'IFSC Code',
-  'MICR Code',
-  'Account Type',
-  'UPI ID'
-]
 
 const initialBankDraft = {
   bankName: '',
@@ -171,7 +159,6 @@ function AddDetails() {
   })
   const [editingProjectTypeId, setEditingProjectTypeId] = useState(null)
   const [organisationDraft, setOrganisationDraft] = useState(initialOrganisationDraft)
-  const [savedOrganisationDetails, setSavedOrganisationDetails] = useState(null)
   const [branches, setBranches] = useState([{ ...initialBranchDraft, id: 'branch-1' }])
   const [contacts, setContacts] = useState([{ ...initialContactDraft, id: 'contact-1' }])
   const [partners, setPartners] = useState([{ ...initialPartnerDraft, id: 'partner-1' }])
@@ -195,18 +182,12 @@ function AddDetails() {
   const [additionalDocuments, setAdditionalDocuments] = useState([])
   const [documentTypeDraft, setDocumentTypeDraft] = useState('')
 
-  // Formats / Annexures State
-  const [formats, setFormats] = useState([])
-  const [viewingFormat, setViewingFormat] = useState(null)
-  const [currentFormatPage, setCurrentFormatPage] = useState(0)
-
   // Is it in update mode?
   const [isUpdateMode, setIsUpdateMode] = useState(false)
   
   useEffect(() => {
     fetchTenderCategories()
     fetchProjectTypes()
-    fetchFormats()
     loadActiveOrganization()
   }, [])
 
@@ -276,17 +257,6 @@ function AddDetails() {
     }
   }
 
-  async function fetchFormats() {
-    try {
-      const resp = await formatService.getFormats()
-      if (resp.success) {
-        setFormats(resp.data)
-      }
-    } catch (err) {
-      console.error('Failed to load formats', err)
-    }
-  }
-
   async function fetchProjectTypes() {
     try {
       const resp = await projectTypeService.getProjectTypes()
@@ -344,7 +314,7 @@ function AddDetails() {
       } else {
         alerts.error('Error', resp.message)
       }
-    } catch (err) {
+} catch {
       alerts.error('Connection Error', `Failed to ${isEditing ? 'update' : 'save'} category`)
     }
   }
@@ -367,7 +337,7 @@ function AddDetails() {
           setTenderCategories(prev => prev.filter(c => c.id !== id))
           alerts.success('Deleted', 'Category deleted successfully')
         }
-      } catch (err) {
+      } catch {
         alerts.error('Error', 'Failed to delete category')
       }
     }
@@ -571,10 +541,6 @@ function AddDetails() {
     }
   }
 
-  const handleClearOrganisation = () => {
-    setOrganisationDraft(initialOrganisationDraft)
-  }
-
   const handleBankChange = (event) => {
     const { name, value } = event.target
     setBankDraft((prev) => ({
@@ -662,21 +628,6 @@ function AddDetails() {
 
   const handleCancelEditBank = () => {
     setEditingBankId(null)
-    setBankDraft(initialBankDraft)
-  }
-
-  const handleAddBank = () => {
-    if (!bankDraft.bankName.trim() || !bankDraft.accountNumber.trim()) {
-      return
-    }
-
-    setBanks((prev) => [
-      ...prev,
-      {
-        id: `bank-${prev.length + 1}`,
-        ...bankDraft
-      }
-    ])
     setBankDraft(initialBankDraft)
   }
 
@@ -780,8 +731,6 @@ function AddDetails() {
     setEmployeeDraft(initialEmployeeDraft)
     setQualificationDraft(initialQualificationDraft)
     setDocumentTypeDraft('')
-    setViewingFormat(null)
-    setCurrentFormatPage(0)
 
     // 4. Set Active Tab
     setActiveTechnicalTab(tabName)
@@ -822,7 +771,7 @@ function AddDetails() {
       } else {
         alerts.error('Error', resp.message)
       }
-    } catch (err) {
+    } catch {
       alerts.error('Error', 'API Connection failed')
     }
   }
@@ -844,7 +793,7 @@ function AddDetails() {
           setProjectTypes(prev => prev.filter(t => t.id !== id))
           alerts.success('Deleted', 'Project type deleted successfully')
         }
-      } catch (err) {
+      } catch {
         alerts.error('Error', 'Failed to delete')
       }
     }
@@ -901,13 +850,6 @@ function AddDetails() {
   }
 
 
-
-  const openProjectTypesTab = () => {
-    setProjectTypeMode('list')
-    setProjectTypeDraft('')
-    setEditingProjectTypeId(null)
-    setActiveTechnicalTab('projectTypes')
-  }
 
   const handleProjectImageChange = (event, docType) => {
     const file = event.target.files?.[0]
@@ -1007,11 +949,6 @@ function AddDetails() {
     setProjectDraft(initialProjectDraft)
   }
 
-  const handleAddProject = () => {
-    handleSaveProject()
-    setShowProjectForm(false)
-  }
-
   const openAddProjectType = () => {
     setProjectTypeDraft({ type_name: '' })
     setEditingProjectTypeId(null)
@@ -1101,13 +1038,6 @@ function AddDetails() {
               onClick={() => handleTechnicalTabChange('documents')}
             >
               Documents
-            </button>
-            <button
-              type="button"
-              className={`technical-subtab ${activeTechnicalTab === 'formats' ? 'active' : ''}`}
-              onClick={() => handleTechnicalTabChange('formats')}
-            >
-              Annexures / Formats
             </button>
           </div>
 
@@ -2321,96 +2251,6 @@ function AddDetails() {
             </FormSection>
           )}
 
-          {activeTechnicalTab === 'formats' && (
-            <FormSection title="Official Annexures & Formats">
-              <p className="section-helper">
-                Standard document templates (Annexure 1-7). Select a format to view the official structure.
-              </p>
-
-              <div className="project-type-table">
-                <div className="project-type-row-v2 table-heading">
-                  <span>Format Name & Title</span>
-                  <span>Action</span>
-                </div>
-
-                {formats.length === 0 ? (
-                  <div className="empty-project-row">No formats found in database.</div>
-                ) : (
-                  formats.map((f) => (
-                    <div className="project-type-row-v2" key={f.id}>
-                      <div className="format-info-cell" style={{ padding: '12px 14px' }}>
-                        <div className="bold-label" style={{ fontWeight: '700', color: '#1c2748' }}>{f.format_name}</div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                          {f.format_title}
-                        </div>
-                      </div>
-                      <div className="row-actions">
-                        <button 
-                          type="button" 
-                          className="edit-row-btn"
-                          style={{ background: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0', width: 'auto' }}
-                          onClick={() => setViewingFormat(f)}
-                        >
-                          View Template
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {viewingFormat && (
-                <div className="format-preview-overlay">
-                  <div className="format-preview-modal">
-                    <div className="preview-header">
-                      <div className="preview-header-info">
-                        <h3>{viewingFormat.format_name} - {viewingFormat.format_title}</h3>
-                        {viewingFormat.template_pages?.length > 1 && (
-                          <span className="page-indicator">Page {currentFormatPage + 1} of {viewingFormat.template_pages.length}</span>
-                        )}
-                      </div>
-                      <button className="close-preview" onClick={() => {
-                        setViewingFormat(null)
-                        setCurrentFormatPage(0)
-                      }}>×</button>
-                    </div>
-                    <div className="preview-content-scroll">
-                       <div 
-                         className="html-renderer-content" 
-                         dangerouslySetInnerHTML={{ __html: viewingFormat.template_pages?.[currentFormatPage] || viewingFormat.template_html }} 
-                       />
-                    </div>
-                    <div className="preview-footer">
-                        <div className="pagination-controls">
-                           {viewingFormat.template_pages?.length > 1 && (
-                             <>
-                               <button 
-                                 className="page-btn" 
-                                 disabled={currentFormatPage === 0}
-                                 onClick={() => setCurrentFormatPage(p => p - 1)}
-                               >
-                                 Previous Page
-                               </button>
-                               <button 
-                                 className="page-btn highlight" 
-                                 disabled={currentFormatPage === viewingFormat.template_pages.length - 1}
-                                 onClick={() => setCurrentFormatPage(p => p + 1)}
-                               >
-                                 Next Page
-                               </button>
-                             </>
-                           )}
-                        </div>
-                      <button type="button" onClick={() => {
-                        setViewingFormat(null)
-                        setCurrentFormatPage(0)
-                      }} className="cancel-btn">Close Annexure</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </FormSection>
-          )}
         </form>
       ) : (
         <div className="financial-placeholder">

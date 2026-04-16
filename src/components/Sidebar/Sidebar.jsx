@@ -1,5 +1,5 @@
-import './Sidebar.css'
-import companyLogo from '../../assets/hero.png'
+import "./Sidebar.css";
+import companyLogo from "../../assets/hero.png";
 
 function Sidebar({ activeSection, onNavigate, onSectionChange }) {
   return (
@@ -12,39 +12,38 @@ function Sidebar({ activeSection, onNavigate, onSectionChange }) {
       <nav className="sidebar-nav">
         <button
           type="button"
-          className={`nav-item ${activeSection === 'overview' ? 'active' : ''}`}
-          onClick={() => onSectionChange('overview')}
+          className={`nav-item ${activeSection === "overview" ? "active" : ""}`}
+          onClick={() => onSectionChange("overview")}
         >
           Overview
         </button>
         <button
           type="button"
-          className={`nav-item ${activeSection === 'addDetails' ? 'active' : ''}`}
-          onClick={() => onSectionChange('addDetails')}
+          className={`nav-item ${activeSection === "addDetails" ? "active" : ""}`}
+          onClick={() => onSectionChange("addDetails")}
         >
           Add Details
         </button>
-        <button
-          type="button"
-          className={`nav-item ${activeSection === 'formatEditor' ? 'active' : ''}`}
-          onClick={() => onSectionChange('formatEditor')}
-        >
-          Add Format
+        <button type="button" className="nav-item">
+          Tenders
         </button>
-        <button type="button" className="nav-item">Tenders</button>
-        <button type="button" className="nav-item">Documents</button>
-        <button type="button" className="nav-item">Settings</button>
+        <button type="button" className="nav-item">
+          Documents
+        </button>
+        <button type="button" className="nav-item">
+          Settings
+        </button>
       </nav>
 
       <button
         type="button"
         className="sidebar-logout"
-        onClick={() => onNavigate('home')}
+        onClick={() => onNavigate("home")}
       >
         Log Out
       </button>
     </aside>
-  )
+  );
 }
 
-export default Sidebar
+export default Sidebar;
