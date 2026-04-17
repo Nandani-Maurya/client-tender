@@ -1,8 +1,23 @@
+import { useNavigate } from 'react-router-dom'
 import './Hero.css'
 
-function Hero({ onNavigate }) {
+function Hero() {
+  const navigate = useNavigate();
+
   return (
     <div className="hero-section">
+      <div className="background-shapes">
+        <span className="shape shape-1" />
+        <span className="shape shape-2" />
+        <span className="shape shape-3" />
+        <span className="shape shape-4" />
+      </div>
+
+      <header className="brandbar">
+        <div className="brand-mark">Portal</div>
+        <p>EOI & RFP portal UI for government procurement</p>
+      </header>
+
       <div className="hero-content">
         <h1>Streamline Your Tender Process</h1>
         <p>
@@ -17,10 +32,10 @@ function Hero({ onNavigate }) {
         </ul>
 
         <div className="hero-actions">
-          <button className="primary-btn" onClick={() => onNavigate('login')}>
+          <button className="primary-btn" onClick={() => navigate('/login')}>
             Get Started
           </button>
-          <button className="secondary-btn" onClick={() => onNavigate('signup')}>
+          <button className="secondary-btn" onClick={() => navigate('/signup')}>
             Create Account
           </button>
         </div>

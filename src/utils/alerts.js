@@ -8,7 +8,7 @@ const premiumSwal = Swal.mixin({
   },
   buttonsStyling: false,
   background: '#ffffff',
-  color: '#1e293b',
+  color: '#1e1b4b',
 })
 
 const alerts = {

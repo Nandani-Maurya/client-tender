@@ -3,7 +3,7 @@ import alerts from '../../utils/alerts'
 import * as categoryService from '../../services/category.service'
 import * as projectTypeService from '../../services/projectType.service'
 import { uploadDocument } from '../../services/document.service'
-import { saveOrganization, getActiveOrganization } from '../../services/organization.service'
+import * as addDetailsService from '../../services/addDetails.service'
 import './AddDetails.css'
 
 const organisationFields = [
@@ -62,7 +62,6 @@ const initialBankDraft = {
   accountHolderName: '',
   accountNumber: '',
   ifscCode: '',
-  micrCode: '',
   accountType: '',
   upiId: '',
   bankStatementImage: null,
@@ -142,19 +141,19 @@ const uploadFields = [
 function AddDetails() {
   const [activeTab, setActiveTab] = useState('technical')
   const [activeTechnicalTab, setActiveTechnicalTab] = useState('tenderCategories')
-  
-  // Tender Categories State
+
+
   const [tenderCategories, setTenderCategories] = useState([])
   const [tenderCategoryMode, setTenderCategoryMode] = useState('list')
-  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({ 
-    category_name: '', 
-    category_description: '' 
+  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({
+    category_name: '',
+    category_description: ''
   })
   const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null)
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectTypeMode, setProjectTypeMode] = useState('list')
-  const [projectTypeDraft, setProjectTypeDraft] = useState({ 
+  const [projectTypeDraft, setProjectTypeDraft] = useState({
     type_name: ''
   })
   const [editingProjectTypeId, setEditingProjectTypeId] = useState(null)
@@ -182,22 +181,23 @@ function AddDetails() {
   const [additionalDocuments, setAdditionalDocuments] = useState([])
   const [documentTypeDraft, setDocumentTypeDraft] = useState('')
 
-  // Is it in update mode?
+
   const [isUpdateMode, setIsUpdateMode] = useState(false)
-  
+  const [activeOrgId, setActiveOrgId] = useState(null)
+  const [isSavingOrg, setIsSavingOrg] = useState(false)
+
   useEffect(() => {
     fetchTenderCategories()
-    fetchProjectTypes()
-    loadActiveOrganization()
   }, [])
 
   async function loadActiveOrganization() {
     try {
-      const res = await getActiveOrganization();
+      const res = await addDetailsService.getActiveDetails();
       if (res.success && res.data) {
         setIsUpdateMode(true);
         const org = res.data;
-        
+        setActiveOrgId(org.id);
+
         setOrganisationDraft(prev => ({
           ...prev,
           nameOfFirm: org.name_of_firm || '',
@@ -215,45 +215,58 @@ function AddDetails() {
           headOfficeCity: org.head_office_city || '',
           headOfficeFullAddress: org.head_office_full_address || ''
         }));
-        
+
         if (org.contacts && org.contacts.length > 0) setContacts(org.contacts.map((c, i) => ({ id: `contact-fetch-${Date.now()}-${i}`, ...c })));
         if (org.branches && org.branches.length > 0) setBranches(org.branches.map((b, i) => ({ id: `branch-fetch-${Date.now()}-${i}`, branchName: b.branch_name, state: b.state, city: b.city, address: b.address })));
         if (org.partners && org.partners.length > 0) setPartners(org.partners.map((p, i) => ({ id: `partner-fetch-${Date.now()}-${i}`, name: p.name, position: p.position, phoneNumber: p.phone, address: p.address, isAuthorized: p.is_authorized })));
-        
-        if (org.iso_certificates && org.iso_certificates.length > 0) {
-          setIsoCertificates(org.iso_certificates.map((iso, i) => ({
-             id: `iso-fetch-${Date.now()}-${i}`,
-             certificateType: iso.certificate_type,
-             year: iso.year,
-             firstImage: null, 
-             secondImage: null,
-             firstImagePreview: iso.first_image_url || '',
-             secondImagePreview: iso.second_image_url || '',
-             existingFirstDocId: iso.first_image_id,
-             existingSecondDocId: iso.second_image_id
-          })));
-        }
-
-        if (org.bank_details && org.bank_details.length > 0) {
-          setBanks(org.bank_details.map((bank, i) => ({
-            id: `bank-fetch-${Date.now()}-${i}`,
-            bankName: bank.bank_name || '',
-            branchName: bank.branch_name || '',
-            accountHolderName: bank.account_holder_name || '',
-            accountNumber: bank.account_number || '',
-            ifscCode: bank.ifsc_code || '',
-            micrCode: bank.micr_code || '',
-            accountType: bank.account_type || '',
-            upiId: bank.upi_id || '',
-            existingBankStatementId: bank.bank_statement_id,
-            existingPassbookId: bank.passbook_id,
-            bankStatementPreview: bank.bank_statement_url || '',
-            passbookPreview: bank.passbook_url || ''
-          })));
-        }
       }
     } catch(err) {
       console.error(err);
+    }
+  }
+
+  async function fetchBankDetails(orgId) {
+    try {
+      const res = await addDetailsService.getBankDetails(orgId);
+      if (res.success && res.data) {
+        setBanks(res.data.map((bank, i) => ({
+          id: `bank-fetch-${Date.now()}-${i}`,
+          bankName: bank.bank_name || '',
+          branchName: bank.branch_name || '',
+          accountHolderName: bank.account_holder_name || '',
+          accountNumber: bank.account_number || '',
+          ifscCode: bank.ifsc_code || '',
+          accountType: bank.account_type || '',
+          upiId: bank.upi_id || '',
+          existingBankStatementId: bank.bank_statement_id,
+          existingPassbookId: bank.passbook_id,
+          bankStatementPreview: bank.bank_statement_url || '',
+          passbookPreview: bank.passbook_url || ''
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load bank details', err);
+    }
+  }
+
+  async function fetchIsoCertificates(orgId) {
+    try {
+      const res = await addDetailsService.getIsoCertificates(orgId);
+      if (res.success && res.data) {
+        setIsoCertificates(res.data.map((iso, i) => ({
+          id: `iso-fetch-${Date.now()}-${i}`,
+          certificateType: iso.certificate_type,
+          year: iso.year,
+          firstImage: null,
+          secondImage: null,
+          firstImagePreview: iso.first_image_url || '',
+          secondImagePreview: iso.second_image_url || '',
+          existingFirstDocId: iso.first_image_id,
+          existingSecondDocId: iso.second_image_id
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load ISO certificates', err);
     }
   }
 
@@ -291,7 +304,7 @@ function AddDetails() {
 
     const isEditing = !!editingTenderCategoryId
     alerts.loading(isEditing ? 'Updating...' : 'Saving...', isEditing ? 'Updating tender category' : 'Adding new tender category')
-    
+
     try {
       let resp
       if (isEditing) {
@@ -306,7 +319,7 @@ function AddDetails() {
         } else {
           setTenderCategories(prev => [resp.data, ...prev])
         }
-        
+
         setTenderCategoryMode('list')
         setTenderCategoryDraft({ category_name: '', category_description: '' })
         setEditingTenderCategoryId(null)
@@ -343,7 +356,7 @@ function AddDetails() {
     }
   }
 
-  // --- ISO Certificates (array of open forms) ---
+
   const handleIsoCertificateInputChange = (index, event) => {
     const { name, value } = event.target
     setIsoCertificates(prev => {
@@ -391,7 +404,7 @@ function AddDetails() {
     setIsoCertificates(prev => prev.filter(c => c.id !== id))
   }
 
-  // --- Branches (array of open forms) ---
+
   const handleBranchChange = (index, event) => {
     const { name, value } = event.target
     setBranches(prev => {
@@ -409,7 +422,7 @@ function AddDetails() {
     setBranches(prev => prev.filter(b => b.id !== id))
   }
 
-  // --- Contacts (array of open forms) ---
+
   const handleContactChange = (index, event) => {
     const { name, value } = event.target
     setContacts(prev => {
@@ -427,7 +440,7 @@ function AddDetails() {
     setContacts(prev => prev.filter(c => c.id !== id))
   }
 
-  // --- Partners (array of open forms) ---
+
   const handlePartnerChange = (index, event) => {
     const { name, value, checked, type } = event.target
     setPartners(prev => {
@@ -450,13 +463,11 @@ function AddDetails() {
     setOrganisationDraft((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Loading state for saving
-  const [isSavingOrg, setIsSavingOrg] = useState(false)
 
-  const handleSaveAllOrganizationDetails = async () => {
+
+  const handleSaveBasicDetails = async () => {
     setIsSavingOrg(true)
     try {
-      // Basic validation
       const hasData = organisationFields.some(({ name }) => organisationDraft[name].trim())
       if (!hasData) {
         alerts.error('No Data', 'Please fill the organization details before saving.')
@@ -464,10 +475,107 @@ function AddDetails() {
         return
       }
 
-      alerts.info('Uploading...', 'Uploading documents and saving data please wait.')
+      const confirm = await alerts.confirm('Save Organization?', 'Are you sure you want to save BASIC organization details?')
+      if (!confirm.isConfirmed) {
+        setIsSavingOrg(false)
+        return
+      }
+
+      const payload = {
+        name_of_firm: organisationDraft.nameOfFirm,
+        registration_number: organisationDraft.registrationNumber,
+        registration_date: organisationDraft.registrationDate,
+        email_address: organisationDraft.emailAddress,
+        web_address: organisationDraft.webAddress,
+        year_of_establishment: parseInt(organisationDraft.yearOfEstablishment, 10) || null,
+        type_of_firm: organisationDraft.typeOfFirm,
+        pan_card_number: organisationDraft.panCardNumber,
+        gst_registration_number: organisationDraft.gstRegistrationNumber,
+        epf_registration_number: organisationDraft.epfRegistrationNumber,
+        esic_registration_number: organisationDraft.esicRegistrationNumber,
+        head_office_state: organisationDraft.headOfficeState,
+        head_office_city: organisationDraft.headOfficeCity,
+        head_office_full_address: organisationDraft.headOfficeFullAddress,
+        contacts: contacts.filter(c => c.number.trim()).map(c => ({ type: c.type, number: c.number })),
+        branches: branches.filter(b => b.branchName.trim() || b.city.trim()).map(b => ({ branch_name: b.branchName, state: b.state, city: b.city, address: b.address })),
+        partners: partners.filter(p => p.name.trim()).map(p => ({ name: p.name, position: p.position, phone: p.phoneNumber, address: p.address, is_authorized: p.isAuthorized }))
+      }
+
+      const res = await addDetailsService.saveBasicDetails(payload)
+      if (res.success) {
+        setActiveOrgId(res.data.organization_id)
+        setIsUpdateMode(true)
+        alerts.success('Success', 'Organization saved successfully')
+      } else {
+        alerts.error('Failed', res.message)
+      }
+    } catch (err) {
+      console.error(err)
+      alerts.error('Error', 'An unexpected error occurred.')
+    } finally {
+      setIsSavingOrg(false)
+    }
+  }
+
+  const handleSaveBankDetails = async () => {
+    if (!activeOrgId) {
+      return alerts.warning('Wait', 'Please save Basic Organization Details first.')
+    }
+
+    setIsSavingOrg(true)
+    try {
+      const confirm = await alerts.confirm('Save Banks?', 'Are you sure you want to save these bank details?')
+      if (!confirm.isConfirmed) {
+        setIsSavingOrg(false)
+        return
+      }
+
+      const bankPayload = banks.map(b => ({
+        bank_name: b.bankName,
+        branch_name: b.branchName,
+        account_holder_name: b.accountHolderName,
+        account_number: b.accountNumber,
+        ifsc_code: b.ifscCode,
+        account_type: b.accountType,
+        upi_id: b.upiId,
+        bank_statement_id: b.existingBankStatementId || null,
+        passbook_id: b.existingPassbookId || null
+      }))
+
+      const res = await addDetailsService.saveBankDetails({
+        organization_id: activeOrgId,
+        bank_details: bankPayload
+      })
+
+      if (res.success) {
+        alerts.success('Success', 'Successfully Submitted')
+      } else {
+        alerts.error('Error', res.message)
+      }
+    } catch (err) {
+      console.error(err)
+      alerts.error('Error', 'Failed to save bank details')
+    } finally {
+      setIsSavingOrg(false)
+    }
+  }
+
+  const handleSaveIsoCertificates = async () => {
+    if (!activeOrgId) {
+      return alerts.warning('Wait', 'Please save Basic Organization Details first.')
+    }
+
+    setIsSavingOrg(true)
+    try {
+      const confirm = await alerts.confirm('Save ISO?', 'Are you sure you want to save ISO certificates?')
+      if (!confirm.isConfirmed) {
+        setIsSavingOrg(false)
+        return
+      }
+
+      alerts.info('Uploading...', 'Uploading documents please wait.')
 
       const processedIso = []
-      // Sequential file upload for ISO certificates to avoid backend spike
       for (const iso of isoCertificates) {
         let firstDocId = null;
         let secondDocId = null;
@@ -491,51 +599,19 @@ function AddDetails() {
         }
       }
 
-      // Cleanup ID/Draft UI properties properly sending arrays
-      const payload = {
-        name_of_firm: organisationDraft.nameOfFirm,
-        registration_number: organisationDraft.registrationNumber,
-        registration_date: organisationDraft.registrationDate,
-        email_address: organisationDraft.emailAddress,
-        web_address: organisationDraft.webAddress,
-        year_of_establishment: parseInt(organisationDraft.yearOfEstablishment, 10) || null,
-        type_of_firm: organisationDraft.typeOfFirm,
-        pan_card_number: organisationDraft.panCardNumber,
-        gst_registration_number: organisationDraft.gstRegistrationNumber,
-        epf_registration_number: organisationDraft.epfRegistrationNumber,
-        esic_registration_number: organisationDraft.esicRegistrationNumber,
-        head_office_state: organisationDraft.headOfficeState,
-        head_office_city: organisationDraft.headOfficeCity,
-        head_office_full_address: organisationDraft.headOfficeFullAddress,
-        contacts: contacts.filter(c => c.number.trim()).map(c => ({ type: c.type, number: c.number })),
-        branches: branches.filter(b => b.branchName.trim() || b.city.trim()).map(b => ({ branch_name: b.branchName, state: b.state, city: b.city, address: b.address })),
-        partners: partners.filter(p => p.name.trim()).map(p => ({ name: p.name, position: p.position, phone: p.phoneNumber, address: p.address, is_authorized: p.isAuthorized })),
-        iso_certificates: processedIso,
-        bank_details: banks.map(b => ({
-          bank_name: b.bankName,
-          branch_name: b.branchName,
-          account_holder_name: b.accountHolderName,
-          account_number: b.accountNumber,
-          ifsc_code: b.ifscCode,
-          micr_code: b.micrCode,
-          account_type: b.accountType,
-          upi_id: b.upiId,
-          bank_statement_id: b.existingBankStatementId || null, // Note: We should ideally upload new docs here too if they changed
-          passbook_id: b.existingPassbookId || null
-        }))
-      }
+      const res = await addDetailsService.saveIsoCertificates({
+        organization_id: activeOrgId,
+        iso_certificates: processedIso
+      })
 
-      const res = await saveOrganization(payload)
       if (res.success) {
-        alerts.success('Success', res.message)
-        setIsUpdateMode(true)
+        alerts.success('Success', 'ISO Certificates updated successfully')
       } else {
-        alerts.error('Failed', res.message || 'Error occurred while saving organization')
+        alerts.error('Error', res.message)
       }
-
     } catch (err) {
       console.error(err)
-      alerts.error('Error', 'An unexpected error occurred.')
+      alerts.error('Error', 'Failed to save ISO certificates')
     } finally {
       setIsSavingOrg(false)
     }
@@ -705,14 +781,14 @@ function AddDetails() {
   }
 
   const handleTechnicalTabChange = (tabName) => {
-    // 1. Reset Modes (Always show Table/List first)
+
     setTenderCategoryMode('list')
     setProjectTypeMode('list')
     setEmployeeMode('table')
     setShowBankForm(false)
     setShowProjectForm(false)
-    
-    // 2. Reset Selection/Edit states
+
+
     setEditingTenderCategoryId(null)
     setEditingProjectTypeId(null)
     setEditingEmployeeId(null)
@@ -722,18 +798,34 @@ function AddDetails() {
     setViewingBankDocuments(null)
     setViewingProjectDocuments(null)
 
-    // 3. Clear/Reset Drafts (Clear input fields)
+
     setTenderCategoryDraft({ category_name: '', category_description: '' })
     setProjectTypeDraft({ type_name: '' })
-    // setOrganisationDraft(initialOrganisationDraft) - STOP CLEARING THIS
+
     setBankDraft(initialBankDraft)
     setProjectDraft(initialProjectDraft)
     setEmployeeDraft(initialEmployeeDraft)
     setQualificationDraft(initialQualificationDraft)
     setDocumentTypeDraft('')
 
-    // 4. Set Active Tab
+
     setActiveTechnicalTab(tabName)
+
+
+    if (tabName === 'tenderCategories') {
+      fetchTenderCategories()
+    } else if (tabName === 'projectTypes') {
+      fetchProjectTypes()
+    } else if (tabName === 'bank') {
+      if (activeOrgId) fetchBankDetails(activeOrgId)
+      else loadActiveOrganization()
+    } else if (tabName === 'iso') {
+      if (activeOrgId) fetchIsoCertificates(activeOrgId)
+      else loadActiveOrganization()
+    } else {
+
+      loadActiveOrganization()
+    }
   }
 
   const handleProjectTypeDraftChange = (e) => {
@@ -1006,10 +1098,17 @@ function AddDetails() {
             </button>
             <button
               type="button"
+              className={`technical-subtab ${activeTechnicalTab === 'iso' ? 'active' : ''}`}
+              onClick={() => handleTechnicalTabChange('iso')}
+            >
+              ISO Certificates
+            </button>
+            <button
+              type="button"
               className={`technical-subtab ${activeTechnicalTab === 'organisation' ? 'active' : ''}`}
               onClick={() => handleTechnicalTabChange('organisation')}
             >
-              Organization
+              Organization Details
             </button>
             <button
               type="button"
@@ -1077,8 +1176,8 @@ function AddDetails() {
                             >
                               Edit
                             </button>
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="delete-row-btn"
                               onClick={() => handleDeleteTenderCategory(cat.id)}
                             >
@@ -1120,13 +1219,13 @@ function AddDetails() {
                     <button type="button" onClick={handleSaveTenderCategory} className="save-btn">
                       Save
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => {
                         setTenderCategoryMode('list')
                         setEditingTenderCategoryId(null)
                         setTenderCategoryDraft({ category_name: '', category_description: '' })
-                      }} 
+                      }}
                       className="cancel-btn"
                     >
                       Back to List
@@ -1164,15 +1263,15 @@ function AddDetails() {
                         <div className="project-type-row-v2" key={type.id}>
                           <span className="bold-label">{type.type_name}</span>
                           <div className="row-actions">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="edit-row-btn"
                               onClick={() => handleEditProjectType(type)}
                             >
                               Edit
                             </button>
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="delete-row-btn"
                               onClick={() => handleDeleteProjectType(type.id)}
                             >
@@ -1204,8 +1303,8 @@ function AddDetails() {
                     <button type="button" onClick={handleSaveProjectType} className="save-btn">
                       Save
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={closeProjectTypeForm}
                       className="cancel-btn"
                     >
@@ -1234,82 +1333,9 @@ function AddDetails() {
                 ))}
               </div>
 
-              {/* ---- ISO Certificates ---- */}
-              <div className="office-block">
-                <h4>ISO Certificate Details</h4>
+              {}
 
-                {isoCertificates.map((cert, idx) => (
-                  <div className="multi-form-entry" key={cert.id}>
-                    <div className="multi-form-header">
-                      <span>ISO Certificate #{idx + 1}</span>
-                      {isoCertificates.length > 1 && (
-                        <button type="button" className="delete-entry-btn" onClick={() => handleRemoveIsoCertificate(cert.id)}>
-                          ✕ Delete this form
-                        </button>
-                      )}
-                    </div>
-                    <div className="iso-cert-entry-form">
-                      <label className="details-field">
-                        <span>Certificate Type</span>
-                        <input
-                          type="text"
-                          name="certificateType"
-                          value={cert.certificateType}
-                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
-                          placeholder="e.g., ISO 9001, ISO 27001, ISO 45001"
-                        />
-                      </label>
-                      <label className="details-field">
-                        <span>Year of Certification</span>
-                        <input
-                          type="number"
-                          name="year"
-                          value={cert.year}
-                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
-                          placeholder="e.g., 2024"
-                          min="1990"
-                          max={new Date().getFullYear()}
-                        />
-                      </label>
-                    </div>
-                    <div className="iso-certificate-upload">
-                      <div className="iso-image-section">
-                        <h5>First Certificate Image</h5>
-                        {cert.firstImagePreview ? (
-                          <div className="image-preview-container">
-                            <img src={cert.firstImagePreview} alt="ISO Cert 1" className="image-preview" />
-                            <button type="button" className="remove-image-btn" onClick={() => handleRemoveIsoCertificateImage(idx, 'first')}>Remove</button>
-                          </div>
-                        ) : (
-                          <label className="image-upload-field">
-                            <span>📸 Upload certificate image</span>
-                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => handleIsoCertificateImageChange(idx, e, 'first')} />
-                          </label>
-                        )}
-                      </div>
-                      <div className="iso-image-section">
-                        <h5>Second Certificate Image (Optional)</h5>
-                        {cert.secondImagePreview ? (
-                          <div className="image-preview-container">
-                            <img src={cert.secondImagePreview} alt="ISO Cert 2" className="image-preview" />
-                            <button type="button" className="remove-image-btn" onClick={() => handleRemoveIsoCertificateImage(idx, 'second')}>Remove</button>
-                          </div>
-                        ) : (
-                          <label className="image-upload-field">
-                            <span>📸 Upload certificate image</span>
-                            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => handleIsoCertificateImageChange(idx, e, 'second')} />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button type="button" className="add-more-section-btn" onClick={handleAddMoreIsoCertificate}>
-                  + Add More ISO Certificate
-                </button>
-              </div>
-
-              {/* ---- Contact Numbers ---- */}
+              {}
               <div className="office-block">
                 <h4>Telephone / Mobile Numbers</h4>
 
@@ -1350,36 +1376,36 @@ function AddDetails() {
                 </button>
               </div>
 
-              {/* ---- Head Office ---- */}
+              {}
               <div className="office-block">
                 <h4>Head Office Details</h4>
                 <div className="details-grid">
                   <label className="details-field">
                     <span>Head Office State</span>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="headOfficeState"
-                      placeholder="Enter state" 
+                      placeholder="Enter state"
                       value={organisationDraft.headOfficeState || ''}
                       onChange={handleOrganisationChange}
                     />
                   </label>
                   <label className="details-field">
                     <span>Head Office City</span>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="headOfficeCity"
-                      placeholder="Enter city" 
+                      placeholder="Enter city"
                       value={organisationDraft.headOfficeCity || ''}
                       onChange={handleOrganisationChange}
                     />
                   </label>
                   <label className="details-field full-field">
                     <span>Head Office Full Address</span>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="headOfficeFullAddress"
-                      placeholder="Enter full address" 
+                      placeholder="Enter full address"
                       value={organisationDraft.headOfficeFullAddress || ''}
                       onChange={handleOrganisationChange}
                     />
@@ -1387,7 +1413,7 @@ function AddDetails() {
                 </div>
               </div>
 
-              {/* ---- Branch Offices ---- */}
+              {}
               <div className="office-block">
                 <h4>Branch Office Details</h4>
 
@@ -1426,7 +1452,7 @@ function AddDetails() {
                 </button>
               </div>
 
-              {/* ---- Partners / Directors ---- */}
+              {}
               <div className="office-block">
                 <h4>Partners / Directors</h4>
 
@@ -1469,18 +1495,63 @@ function AddDetails() {
                 </button>
               </div>
 
-              {/* ---- Single Save All Button ---- */}
-              <div className="save-all-section">
-                <button
-                  type="button"
-                  className="save-all-org-btn"
-                  onClick={handleSaveAllOrganizationDetails}
-                  disabled={isSavingOrg}
-                >
-                  {isSavingOrg ? '⏳ UPDATING...' : (isUpdateMode ? '📝 UPDATE ALL ORGANIZATION DETAILS' : '💾 SAVE ALL ORGANIZATION DETAILS')}
+              <div className="section-save-container">
+                <button type="button" className="save-all-details-btn" onClick={handleSaveBasicDetails} disabled={isSavingOrg}>
+                  {isSavingOrg ? 'Saving...' : 'Save Organization Details'}
                 </button>
               </div>
+            </FormSection>
+          )}
 
+          {activeTechnicalTab === 'iso' && (
+            <FormSection title="ISO Certificate Details">
+               <div className="office-block">
+                <h4>ISO Certificates</h4>
+                {isoCertificates.map((cert, idx) => (
+                  <div className="multi-form-entry" key={cert.id}>
+                    <div className="multi-form-header">
+                      <span>ISO Certificate #{idx + 1}</span>
+                      {isoCertificates.length > 1 && (
+                        <button type="button" className="delete-entry-btn" onClick={() => handleRemoveIsoCertificate(cert.id)}>
+                          ✕ Delete this form
+                        </button>
+                      )}
+                    </div>
+                    <div className="iso-cert-entry-form">
+                      <label className="details-field">
+                        <span>Certificate Type</span>
+                        <input
+                          type="text"
+                          name="certificateType"
+                          value={cert.certificateType}
+                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
+                          placeholder="e.g., ISO 9001"
+                        />
+                      </label>
+                      <label className="details-field">
+                        <span>Year</span>
+                        <input
+                          type="number"
+                          name="year"
+                          value={cert.year}
+                          onChange={(e) => handleIsoCertificateInputChange(idx, e)}
+                        />
+                      </label>
+                    </div>
+                    <div className="iso-certificate-upload">
+                       {}
+                    </div>
+                  </div>
+                ))}
+                <button type="button" className="add-more-section-btn" onClick={handleAddMoreIsoCertificate}>
+                  + Add More ISO Certificate
+                </button>
+              </div>
+              <div className="section-save-container">
+                <button type="button" className="save-all-details-btn" onClick={handleSaveIsoCertificates} disabled={isSavingOrg}>
+                  {isSavingOrg ? 'Saving...' : 'Save ISO Certificates to Cloud'}
+                </button>
+              </div>
             </FormSection>
           )}
 
@@ -1565,11 +1636,17 @@ function AddDetails() {
                       + Add Bank Details
                     </button>
                   </div>
+
+                  <div className="section-save-container" style={{ marginTop: '2rem', borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>
+                    <button type="button" className="save-all-details-btn" onClick={handleSaveBankDetails} disabled={isSavingOrg}>
+                       {isSavingOrg ? 'Saving Bank Data...' : 'Save All Bank Details to Cloud'}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="bank-form-section">
                   <h4>{editingBankId ? 'Edit Bank Details' : 'Add New Bank Account'}</h4>
-                  
+
                   <div className="bank-entry-form">
                     <label className="details-field">
                       <span>Bank Name</span>
@@ -1621,16 +1698,7 @@ function AddDetails() {
                         placeholder="Enter IFSC code"
                       />
                     </label>
-                    <label className="details-field">
-                      <span>MICR Code</span>
-                      <input
-                        type="text"
-                        name="micrCode"
-                        value={bankDraft.micrCode}
-                        onChange={handleBankChange}
-                        placeholder="Enter MICR code"
-                      />
-                    </label>
+
                     <label className="details-field">
                       <span>Account Type</span>
                       <select
@@ -1858,7 +1926,7 @@ function AddDetails() {
                           <span className="detail-value">{viewingProjectDocuments.currentStatus || '-'}</span>
                         </div>
                       </div>
-                      
+
                       <div className="project-documents-viewer">
                         <h4>Documents</h4>
                         <div className="documents-preview-grid">
@@ -1894,7 +1962,7 @@ function AddDetails() {
               ) : (
                 <div className="project-form-section">
                   <h4>{editingProjectId ? 'Edit Project Details' : 'Add New Project'}</h4>
-                  
+
                   <div className="project-entry-form">
                     <label className="details-field">
                       <span>Project Type</span>
@@ -2004,7 +2072,7 @@ function AddDetails() {
                           onChange={(e) => handleProjectImageChange(e, 'other')}
                         />
                       </label>
-                      
+
                       {projectDraft.otherProjectDocumentsPreview?.length > 0 && (
                         <div className="other-docs-list">
                           <h5>Uploaded Documents:</h5>

@@ -142,70 +142,85 @@ input {
   animation: progress 4s linear forwards;
 }
 
-/* Premium SweetAlert Styles */
+/* Premium SweetAlert Styles (Light Purple Accent Theme) */
 .swal-popup-premium {
-  border-radius: 16px !important;
-  font-family: 'Inter', sans-serif !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  padding: 1.5em !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #fdfdfd !important; /* Subtle background tint */
-  width: 480px !important; /* Fixed width for consistency */
-  max-width: 90% !important;
+  border-radius: 24px !important;
+  font-family: 'Outfit', 'Inter', sans-serif !important;
+  box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  padding: 2.5em !important;
+  border: 1px solid #f3efff !important;
+  background: #ffffff !important;
+  width: 460px !important;
+  max-width: 95% !important;
+  min-height: auto !important;
 }
 
 .swal-btn {
-  padding: 12px 24px !important;
-  font-size: 0.8rem !important;
+  padding: 14px 28px !important;
+  font-size: 0.9rem !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
-  margin: 8px !important;
+  border-radius: 14px !important;
+  margin: 10px !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  min-width: 120px !important;
-}
-
-.swal-btn.confirm {
-  background: #2563eb !important;
-  color: white !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  min-width: 150px !important;
   border: none !important;
 }
 
+.swal-btn.confirm {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3) !important;
+}
+
 .swal-btn.confirm:hover {
-  background: #1d4ed8 !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4) !important;
+  filter: brightness(1.1) !important;
 }
 
 .swal-btn.cancel {
-  background: white !important;
-  color: #475569 !important;
-  border: 1px solid #e2e8f0 !important;
+  background: #fdfbff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ddd6fe !important;
 }
 
 .swal-btn.cancel:hover {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: #f5f3ff !important;
+  border-color: #c4b5fd !important;
 }
 
 .swal2-title {
-  color: #1e293b !important;
+  color: #1e1b4b !important;
   font-weight: 700 !important;
-  font-size: 1.25rem !important; /* Reduced font size */
-  margin-top: 0.5em !important;
+  font-size: 1.5rem !important;
+  margin-top: 0.8em !important;
+  letter-spacing: -0.5px !important;
 }
 
 .swal2-html-container {
-  color: #64748b !important;
-  font-size: 0.9rem !important; /* Reduced font size */
-  line-height: 1.5 !important;
-  margin-top: 0.5em !important;
+  color: #4338ca !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  margin-top: 0.6em !important;
+  font-weight: 400 !important;
 }
 
 .swal2-icon {
-  transform: scale(0.8) !important; /* Scale down icon for better fit */
-  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.5em !important;
+}
+
+.swal2-icon.swal2-success { border-color: #8b5cf6 !important; color: #8b5cf6 !important; }
+.swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(139, 92, 246, 0.2) !important; }
+.swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: #8b5cf6 !important; }
+
+.swal2-timer-progress-bar {
+  background: linear-gradient(to right, #8b5cf6, #a78bfa) !important;
+  border-bottom-left-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
 }
 
 

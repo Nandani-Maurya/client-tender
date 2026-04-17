@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import alerts from '../../utils/alerts'
-import { setToken, setUser } from '../../utils/auth'
+import { setToken, setUser, setRefreshToken } from '../../utils/auth'
 import { loginUser } from '../../services/auth.service'
 import './Login.css'
 
-function Login({ onNavigate }) {
+function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: '',
     password: ''
@@ -28,16 +30,15 @@ function Login({ onNavigate }) {
 
       if (data.success) {
         setToken(data.data.token)
+        setRefreshToken(data.data.refreshToken)
         setUser(data.data.user)
-        
+
         await alerts.success('Login Successful', `Welcome back, ${data.data.user.name}!`)
-        onNavigate('dashboard', data.data.user)
+        navigate('/dashboard')
       } else {
-        // API returned success:false but no exception
         alerts.error('Authentication Failed', data.message || 'Invalid email or password')
       }
     } catch (err) {
-      // Professional error handling
       const errorMessage = err.message || 'Something went wrong'
       if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('network')) {
         alerts.error('Server Unreachable', 'Please check your internet connection or ensure the server is running.')
@@ -87,8 +88,8 @@ function Login({ onNavigate }) {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={`login-btn ${loading ? 'btn-loading' : ''}`}
             disabled={loading}
           >
@@ -102,7 +103,7 @@ function Login({ onNavigate }) {
             <button
               type="button"
               className="link-btn"
-              onClick={() => !loading && onNavigate('signup')}
+              onClick={() => !loading && navigate('/signup')}
               disabled={loading}
             >
               Create one here
@@ -111,7 +112,7 @@ function Login({ onNavigate }) {
           <button
             type="button"
             className="back-btn"
-            onClick={() => !loading && onNavigate('home')}
+            onClick={() => !loading && navigate('/')}
             disabled={loading}
           >
             &lt; Back to Home

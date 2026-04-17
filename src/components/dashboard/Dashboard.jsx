@@ -1,18 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
 import AddDetails from '../AddDetails/AddDetails'
 import Header from '../Header/Header'
 import Sidebar from '../Sidebar/Sidebar'
 import Footer from '../Footer/Footer'
 
-function Dashboard({ onNavigate, user }) {
+function Dashboard({ user }) {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview')
 
   return (
     <section className="dashboard-page">
       <Sidebar
         activeSection={activeSection}
-        onNavigate={onNavigate}
+        onNavigate={navigate}
         onSectionChange={setActiveSection}
       />
 

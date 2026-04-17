@@ -1,68 +1,25 @@
-import config from '../config';
-
-const API_URL = `${config.apiUrl}/project-types`;
+import { request } from '../utils/apiClient';
 
 export const getProjectTypes = async () => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error in getProjectTypes:', error);
-    throw error;
-  }
+  return request('/project-types');
 };
 
 export const createProjectType = async (data) => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(data)
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error in createProjectType:', error);
-    throw error;
-  }
+  return request('/project-types', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 };
 
 export const updateProjectType = async (id, data) => {
-  try {
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(data)
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error in updateProjectType:', error);
-    throw error;
-  }
+  return request(`/project-types/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
 };
 
 export const deleteProjectType = async (id) => {
-  try {
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Error in deleteProjectType:', error);
-    throw error;
-  }
+  return request(`/project-types/${id}`, {
+    method: 'DELETE'
+  });
 };

@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { request } from '../utils/apiClient';
 
 export const uploadDocument = async (file, label) => {
   const formData = new FormData();
@@ -7,17 +7,11 @@ export const uploadDocument = async (file, label) => {
     formData.append('label', label);
   }
 
-  try {
-    const response = await fetch(`${API_URL}/documents`, {
-      method: 'POST',
-      body: formData,
-      // Do not set Content-Type for FormData, browser sets it automatically with boundary
-    });
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error uploading document:', error);
-    return { success: false, message: 'Server connection error during document upload' };
-  }
+  return request('/documents', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': undefined
+    }
+  });
 };

@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import alerts from '../../utils/alerts'
-import { setToken, setUser } from '../../utils/auth'
+import { setToken, setUser, setRefreshToken } from '../../utils/auth'
 import { signupUser } from '../../services/auth.service'
 import './Signup.css'
 
-function Signup({ onNavigate }) {
+function Signup() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -30,10 +32,11 @@ function Signup({ onNavigate }) {
 
       if (data.success) {
         setToken(data.data.token)
+        setRefreshToken(data.data.refreshToken)
         setUser(data.data.user)
 
         await alerts.success('Welcome Aboard!', 'Your account has been created successfully')
-        onNavigate('dashboard', data.data.user)
+        navigate('/dashboard')
       } else {
         alerts.error('Registration Failed', data.message || 'Could not create account')
       }
@@ -115,8 +118,8 @@ function Signup({ onNavigate }) {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={`signup-btn ${loading ? 'btn-loading' : ''}`}
             disabled={loading}
           >
@@ -130,7 +133,7 @@ function Signup({ onNavigate }) {
             <button
               type="button"
               className="link-btn"
-              onClick={() => !loading && onNavigate('login')}
+              onClick={() => !loading && navigate('/login')}
               disabled={loading}
             >
               Sign in here
@@ -139,7 +142,7 @@ function Signup({ onNavigate }) {
           <button
             type="button"
             className="back-btn"
-            onClick={() => !loading && onNavigate('home')}
+            onClick={() => !loading && navigate('/')}
             disabled={loading}
           >
             &lt; Back to Home
