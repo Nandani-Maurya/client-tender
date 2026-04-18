@@ -1,0 +1,38 @@
+.project-table {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.project-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  align-items: center;
+  border-bottom: 1px solid #e3e9f6;
+  padding: 8px;
+}
+
+.project-row.table-heading {
+  background: #f0f5ff;
+  font-weight: 700;
+}
+
+.project-entry-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.view-docs-btn {
+  padding: 6px 12px;
+  background: #f0f5ff;
+  color: #2d6eff;
+  border: 1px solid #cfd9ef;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}

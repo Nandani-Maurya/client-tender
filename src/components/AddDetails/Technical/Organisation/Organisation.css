@@ -1,0 +1,49 @@
+.branch-entry-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contact-entry-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr);
+  gap: 12px;
+}
+
+.partner-entry-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.office-block {
+  margin-top: 20px;
+  border-top: 1px solid #e3e9f6;
+  padding-top: 20px;
+}
+
+.office-block h4 {
+  color: #1c2748;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.organisation-summary {
+  margin-top: 20px;
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.branch-table, .partner-table {
+  margin-top: 12px;
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+}

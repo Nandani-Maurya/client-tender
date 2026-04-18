@@ -6,14 +6,12 @@ let refreshPromise = null;
 
 
 export const request = async (endpoint, options = {}) => {
-  const url = endpoint.startsWith('http') ? endpoint : `${config.apiUrl}${endpoint}`;
-
+  const url = `${config.apiUrl}${endpoint}`;
 
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-
 
   if (options.body instanceof FormData || headers['Content-Type'] === undefined) {
     delete headers['Content-Type'];
@@ -23,7 +21,6 @@ export const request = async (endpoint, options = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-
 
   let response = await fetch(url, { ...options, headers });
 

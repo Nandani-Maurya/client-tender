@@ -1,0 +1,47 @@
+.bank-table {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bank-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: center;
+  border-bottom: 1px solid #e3e9f6;
+  padding: 6px;
+}
+
+.bank-row.table-heading {
+  background: #f0f5ff;
+  font-weight: 700;
+}
+
+.bank-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.bank-entry-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.bank-doc-upload {
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.bank-documents-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 15px;
+}

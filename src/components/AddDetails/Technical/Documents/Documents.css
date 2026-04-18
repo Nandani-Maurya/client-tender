@@ -1,0 +1,41 @@
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upload-field span {
+  font-weight: 600;
+  color: #3f4c70;
+  font-size: 13px;
+}
+
+.upload-field input {
+  padding: 10px;
+  border: 1px solid #cfd9ef;
+  border-radius: 8px;
+  background: white;
+}
+
+.additional-documents-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e3e9f6;
+}
+
+.additional-document-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8faff;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
