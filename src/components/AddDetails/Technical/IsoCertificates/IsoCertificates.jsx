@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import alerts from '../../../../utils/alerts'
 import { uploadDocument } from '../../../../services/document.service'
 import * as addDetailsService from '../../../../services/addDetails.service'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './IsoCertificates.css'
 
 const initialIsoCertificateDraft = {
@@ -166,6 +167,47 @@ function IsoCertificates({ activeOrgId }) {
     setIsoCertificates(newIsoList)
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'certificateType',
+      header: 'Certificate Type',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      accessorKey: 'year',
+      header: 'Year',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const cert = row.original
+        return (
+          <div className="row-actions">
+            <button type="button" className="view-row-btn" onClick={() => setViewingDocsId(cert.id)}>View</button>
+            {(cert.firstImagePreview || cert.secondImagePreview) && (
+              <button type="button" className="view-docs-btn" onClick={() => setViewingDocsId(cert.id)}>Docs</button>
+            )}
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => {
+                setEditingIsoId(cert.id)
+                setIsoDraft(cert)
+                setIsoMode('form')
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="delete-row-btn" onClick={() => handleRemoveIso(cert.id)}>Delete</button>
+          </div>
+        )
+      }
+    }
+  ], [handleRemoveIso])
 
 
   return (
@@ -181,36 +223,11 @@ function IsoCertificates({ activeOrgId }) {
             </button>
           </div>
 
-          <div className="iso-cert-table">
-            <div className="iso-cert-row table-heading">
-              <span>Certificate Type</span>
-              <span>Year</span>
-              <span>Action</span>
-            </div>
-
-            {isoCertificates.length === 0 ? (
-              <div className="empty-project-row">No certificates added yet.</div>
-            ) : (
-              isoCertificates.map(cert => (
-                <div className="iso-cert-row" key={cert.id}>
-                  <span className="bold-label">{cert.certificateType}</span>
-                  <span>{cert.year || '-'}</span>
-                  <div className="row-actions">
-                    <button type="button" className="view-row-btn" onClick={() => setViewingDocsId(cert.id)}>View</button>
-                    {(cert.firstImagePreview || cert.secondImagePreview) && (
-                      <button type="button" className="view-docs-btn" onClick={() => setViewingDocsId(cert.id)}>Docs</button>
-                    )}
-                    <button type="button" className="edit-row-btn" onClick={() => {
-                        setEditingIsoId(cert.id);
-                        setIsoDraft(cert);
-                        setIsoMode('form');
-                      }}>Edit</button>
-                    <button type="button" className="delete-row-btn" onClick={() => handleRemoveIso(cert.id)}>Delete</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={isoCertificates}
+            emptyMessage="No certificates added yet."
+          />
 
           {viewingDocsId && (() => {
             const cert = isoCertificates.find(c => c.id === viewingDocsId);

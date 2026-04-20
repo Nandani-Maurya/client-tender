@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './EmployeeBioData.css'
 
 const employeeBasicFields = [
@@ -91,6 +92,60 @@ function EmployeeBioData() {
     setEmployees(prev => prev.filter(e => e.id !== id))
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'profession',
+      header: 'Profession',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      accessorKey: 'currentPosition',
+      header: 'Position',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'totalExperience',
+      header: 'Experience',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'employerName',
+      header: 'Employer',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const emp = row.original
+        return (
+          <div className="row-actions">
+            <button type="button" className="view-row-btn" onClick={() => setViewingEmployee(emp)}>View</button>
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => {
+                setEditingEmployeeId(emp.id)
+                setEmployeeDraft(emp)
+                setEmployeeMode('form')
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="delete-row-btn" onClick={() => handleDeleteEmployee(emp.id)}>Delete</button>
+          </div>
+        )
+      }
+    }
+  ], [])
+
   return (
     <section className="details-section">
       <h3>Employee Bio-data Management</h3>
@@ -101,34 +156,11 @@ function EmployeeBioData() {
           <div className="section-actions">
             <button type="button" onClick={() => setEmployeeMode('form')}>+ Add New Employee</button>
           </div>
-          <div className="employee-table">
-            <div className="employee-row table-heading">
-              <span>Profession</span>
-              <span>Name</span>
-              <span>Position</span>
-              <span>Experience</span>
-              <span>Employer</span>
-              <span>Action</span>
-            </div>
-            {employees.length === 0 ? (
-              <div className="empty-project-row">No employee records in system.</div>
-            ) : (
-              employees.map((emp) => (
-                <div className="employee-row" key={emp.id}>
-                  <span>{emp.profession || '-'}</span>
-                  <span className="bold-label">{emp.name}</span>
-                  <span>{emp.currentPosition || '-'}</span>
-                  <span>{emp.totalExperience || '-'}</span>
-                  <span>{emp.employerName || '-'}</span>
-                  <div className="row-actions">
-                    <button type="button" className="view-row-btn" onClick={() => setViewingEmployee(emp)}>View</button>
-                    <button type="button" className="edit-row-btn" onClick={() => { setEditingEmployeeId(emp.id); setEmployeeDraft(emp); setEmployeeMode('form'); }}>Edit</button>
-                    <button type="button" className="delete-row-btn" onClick={() => handleDeleteEmployee(emp.id)}>Delete</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={employees}
+            emptyMessage="No employee records in system."
+          />
 
           {viewingEmployee && (
             <div className="modal-overlay">

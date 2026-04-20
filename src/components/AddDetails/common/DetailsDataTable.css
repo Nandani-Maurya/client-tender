@@ -1,0 +1,124 @@
+.details-mrt-wrapper {
+  margin-top: 4px;
+}
+
+.details-mrt-wrapper .MuiPaper-root {
+  border: 1px solid #dce4f4;
+  border-radius: 10px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.details-mrt-wrapper .MuiToolbar-root {
+  min-height: 58px;
+  background: #f8fbff;
+}
+
+.details-mrt-wrapper .MuiToolbar-root:first-of-type {
+  border-bottom: 1px solid #e8eef9;
+  padding: 10px 12px;
+}
+
+.details-mrt-wrapper .MuiTableContainer-root {
+  overflow-x: auto;
+}
+
+.details-mrt-wrapper .MuiTableHead-root .MuiTableCell-root {
+  background: #f0f5ff;
+  color: #1c2748;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #dce4f4;
+}
+
+.details-mrt-wrapper .MuiTableBody-root .MuiTableCell-root {
+  color: #334160;
+  font-size: 12px;
+  border-bottom: 1px solid #eef3fb;
+}
+
+.details-mrt-wrapper .MuiTableHead-root .MuiTableCell-root,
+.details-mrt-wrapper .MuiTableBody-root .MuiTableCell-root {
+  text-align: center !important;
+  vertical-align: middle;
+  padding: 10px 8px;
+}
+
+.details-mrt-wrapper .Mui-TableHeadCell-Content,
+.details-mrt-wrapper .Mui-TableHeadCell-Content-Labels {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.details-mrt-wrapper .MuiTableBody-root .MuiTableCell-root > div {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.details-mrt-wrapper .MuiTableHead-root .MuiTableCell-root .MuiInputBase-input {
+  text-align: center;
+}
+
+.details-mrt-wrapper .details-table-search {
+  margin: 0;
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-root {
+  height: 40px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(17, 36, 89, 0.08);
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-input {
+  font-size: 13px;
+  color: #1d2846;
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-input::placeholder {
+  color: #4a5f8c;
+  opacity: 1;
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-notchedOutline {
+  border-color: #cfd9ef;
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #8fa7dd;
+}
+
+.details-mrt-wrapper .details-table-search .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #2d6eff;
+  border-width: 1px;
+}
+
+.details-mrt-wrapper .details-table-search .MuiInputAdornment-root .MuiSvgIcon-root {
+  color: #2f4678;
+}
+
+.details-mrt-wrapper .details-table-search-icon {
+  color: #243b6b !important;
+  opacity: 1;
+}
+
+.details-mrt-wrapper .row-actions {
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.details-mrt-wrapper .row-actions button {
+  white-space: nowrap;
+}
+
+.details-mrt-wrapper .empty-project-row {
+  margin: 0;
+  background: #ffffff;
+}

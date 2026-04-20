@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import alerts from '../../../../utils/alerts'
 import * as addDetailsService from '../../../../services/addDetails.service'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './BankDetails.css'
 
 const initialBankDraft = {
@@ -181,6 +182,58 @@ function BankDetails({ activeOrgId }) {
     setBanks(newBanks)
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'bankName',
+      header: 'Bank Name',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      accessorKey: 'accountHolderName',
+      header: 'Account Holder',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'accountNumber',
+      header: 'Account Number',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'accountType',
+      header: 'Account Type',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const bank = row.original
+        return (
+          <div className="row-actions">
+            <button type="button" className="view-row-btn" onClick={() => setViewingBankDocuments(bank)}>View</button>
+            {(bank.bankStatementPreview || bank.passbookPreview) && (
+              <button type="button" className="view-docs-btn" onClick={() => setViewingBankDocuments(bank)}>Docs</button>
+            )}
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => {
+                setEditingBankId(bank.id)
+                setBankDraft(bank)
+                setShowBankForm(true)
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="delete-row-btn" onClick={() => handleRemoveBank(bank.id)}>Delete</button>
+          </div>
+        )
+      }
+    }
+  ], [handleRemoveBank])
+
   return (
     <section className="details-section">
       <h3>Bank Details Management</h3>
@@ -192,39 +245,11 @@ function BankDetails({ activeOrgId }) {
             <button type="button" onClick={() => setShowBankForm(true)}>+ Add New Bank Account</button>
           </div>
 
-          <div className="bank-table">
-            <div className="bank-row table-heading">
-              <span>Bank Name</span>
-              <span>Account Holder</span>
-              <span>Account Number</span>
-              <span>Account Type</span>
-              <span>Action</span>
-            </div>
-            {banks.length === 0 ? (
-              <div className="empty-project-row">No bank details added yet.</div>
-            ) : (
-              banks.map((bank) => (
-                <div className="bank-row" key={bank.id}>
-                  <span className="bold-label">{bank.bankName}</span>
-                  <span>{bank.accountHolderName || '-'}</span>
-                  <span>{bank.accountNumber}</span>
-                  <span>{bank.accountType || '-'}</span>
-                  <div className="row-actions">
-                    <button type="button" className="view-row-btn" onClick={() => setViewingBankDocuments(bank)}>View</button>
-                    {(bank.bankStatementPreview || bank.passbookPreview) && (
-                      <button type="button" className="view-docs-btn" onClick={() => setViewingBankDocuments(bank)}>Docs</button>
-                    )}
-                    <button type="button" className="edit-row-btn" onClick={() => {
-                        setEditingBankId(bank.id);
-                        setBankDraft(bank);
-                        setShowBankForm(true);
-                      }}>Edit</button>
-                    <button type="button" className="delete-row-btn" onClick={() => handleRemoveBank(bank.id)}>Delete</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={banks}
+            emptyMessage="No bank details added yet."
+          />
 
           {viewingBankDocuments && (
             <div className="modal-overlay">

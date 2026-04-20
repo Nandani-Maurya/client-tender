@@ -1,20 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import alerts from '../../../../utils/alerts'
 import * as categoryService from '../../../../services/category.service'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './TenderCategories.css'
 
 function TenderCategories() {
   const [tenderCategories, setTenderCategories] = useState([])
   const [tenderCategoryMode, setTenderCategoryMode] = useState('list')
-  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({ 
-    category_name: '', 
-    category_description: '' 
-  })
+  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({category_name: '', category_description: ''})
   const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null)
   const [viewingCategory, setViewingCategory] = useState(null)
-  useEffect(() => {
-    fetchTenderCategories()
-  }, [])
+  useEffect(() => { fetchTenderCategories()}, [])
 
   async function fetchTenderCategories() {
     try {
@@ -22,7 +18,11 @@ function TenderCategories() {
       if (resp.success) {
         setTenderCategories(resp.data)
       }
+      else{
+        alerts.error('Error', resp.message || 'Failed to load categories')
+      }
     } catch (err) {
+      alerts.error('Error', 'Failed to load categories')
       console.error('Failed to load categories', err)
     }
   }
@@ -91,6 +91,53 @@ function TenderCategories() {
     }
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'category_name',
+      header: 'Category Value',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      accessorKey: 'category_description',
+      header: 'Description',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const cat = row.original
+        return (
+          <div className="row-actions">
+            <button
+              type="button"
+              className="view-row-btn"
+              onClick={() => setViewingCategory(cat)}
+            >
+              View
+            </button>
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => handleEditTenderCategory(cat)}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="delete-row-btn"
+              onClick={() => handleDeleteTenderCategory(cat.id)}
+            >
+              Delete
+            </button>
+          </div>
+        )
+      }
+    }
+  ], [])
+
   return (
     <section className="details-section">
       <h3>Tender Category Management</h3>
@@ -106,47 +153,11 @@ function TenderCategories() {
             </button>
           </div>
 
-          <div className="project-type-table">
-            <div className="tender-category-row table-heading">
-              <span>Category Value</span>
-              <span>Description</span>
-              <span>Action</span>
-            </div>
-
-            {tenderCategories.length === 0 ? (
-              <div className="empty-project-row">No categories found in system.</div>
-            ) : (
-              tenderCategories.map((cat) => (
-                <div className="tender-category-row" key={cat.id}>
-                  <span className="bold-label">{cat.category_name}</span>
-                  <span>{cat.category_description || '-'}</span>
-                  <div className="row-actions">
-                    <button
-                      type="button"
-                      className="view-row-btn"
-                      onClick={() => setViewingCategory(cat)}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      className="edit-row-btn"
-                      onClick={() => handleEditTenderCategory(cat)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      type="button" 
-                      className="delete-row-btn"
-                      onClick={() => handleDeleteTenderCategory(cat.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={tenderCategories}
+            emptyMessage="No categories found in system."
+          />
 
           {viewingCategory && (
             <div className="modal-overlay">

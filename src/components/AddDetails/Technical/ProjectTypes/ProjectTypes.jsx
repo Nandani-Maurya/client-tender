@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import alerts from '../../../../utils/alerts'
 import * as projectTypeService from '../../../../services/projectType.service'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './ProjectTypes.css'
 
 function ProjectTypes() {
@@ -90,6 +91,48 @@ function ProjectTypes() {
     }
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'type_name',
+      header: 'Type Name',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const type = row.original
+        return (
+          <div className="row-actions">
+            <button
+              type="button"
+              className="view-row-btn"
+              onClick={() => setViewingType(type)}
+            >
+              View
+            </button>
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => handleEditProjectType(type)}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="delete-row-btn"
+              onClick={() => handleDeleteProjectType(type.id)}
+            >
+              Delete
+            </button>
+          </div>
+        )
+      }
+    }
+  ], [])
+
   return (
     <section className="details-section">
       <h3>Project Type Setup</h3>
@@ -105,45 +148,11 @@ function ProjectTypes() {
             </button>
           </div>
 
-          <div className="project-type-table">
-            <div className="project-type-row table-heading">
-              <span>Type Name</span>
-              <span>Action</span>
-            </div>
-
-            {projectTypes.length === 0 ? (
-              <div className="empty-project-row">No project types found.</div>
-            ) : (
-              projectTypes.map((type) => (
-                <div className="project-type-row" key={type.id}>
-                  <span className="bold-label">{type.type_name}</span>
-                  <div className="row-actions">
-                    <button 
-                      type="button" 
-                      className="view-row-btn"
-                      onClick={() => setViewingType(type)}
-                    >
-                      View
-                    </button>
-                    <button 
-                      type="button" 
-                      className="edit-row-btn"
-                      onClick={() => handleEditProjectType(type)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      type="button" 
-                      className="delete-row-btn"
-                      onClick={() => handleDeleteProjectType(type.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={projectTypes}
+            emptyMessage="No project types found."
+          />
 
           {viewingType && (
             <div className="modal-overlay">

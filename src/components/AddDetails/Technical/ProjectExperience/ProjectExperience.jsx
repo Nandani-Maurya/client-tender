@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import alerts from '../../../../utils/alerts'
+import DetailsDataTable from '../../common/DetailsDataTable'
 import './ProjectExperience.css'
 
 const initialProjectDraft = {
@@ -134,6 +135,68 @@ function ProjectExperience({ projectTypes }) {
     setProjects((prev) => prev.filter((p) => p.id !== projectId))
   }
 
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'clientName',
+      header: 'Client Name',
+      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
+    },
+    {
+      accessorKey: 'projectName',
+      header: 'Project / Assignment',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'projectCost',
+      header: 'Project Cost',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'consultancyFee',
+      header: 'Consultancy Fee',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'workOrderDate',
+      header: 'Work Order Date',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      accessorKey: 'completionCertificateDate',
+      header: 'Comp. Cert. Date',
+      Cell: ({ cell }) => cell.getValue() || '-'
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      enableSorting: false,
+      enableColumnFilter: false,
+      Cell: ({ row }) => {
+        const project = row.original
+        return (
+          <div className="row-actions">
+            <button type="button" className="view-row-btn" onClick={() => setViewingProjectDocuments(project)}>View</button>
+            {(project.workOrderDocumentPreview || project.completionCertificateDocumentPreview || project.otherProjectDocumentsPreview?.length > 0) && (
+              <button type="button" className="view-docs-btn" onClick={() => setViewingProjectDocuments(project)}>Docs</button>
+            )}
+            <button
+              type="button"
+              className="edit-row-btn"
+              onClick={() => {
+                setEditingProjectId(project.id)
+                setProjectDraft(project)
+                setShowProjectForm(true)
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="delete-row-btn" onClick={() => handleRemoveProject(project.id)}>Delete</button>
+          </div>
+        )
+      }
+    }
+  ], [])
+
   return (
     <section className="details-section">
       <h3>Project Experience Details</h3>
@@ -149,44 +212,11 @@ function ProjectExperience({ projectTypes }) {
             </button>
           </div>
 
-          <div className="project-table">
-            <div className="project-row table-heading">
-              <span>Client Name</span>
-              <span>Project / Assignment</span>
-              <span>Project Cost</span>
-              <span>Consultancy Fee</span>
-              <span>Work Order Date</span>
-              <span>Comp. Cert. Date</span>
-              <span>Action</span>
-            </div>
-
-            {projects.length === 0 ? (
-              <div className="empty-project-row">No project added yet.</div>
-            ) : (
-              projects.map((project) => (
-                <div className="project-row" key={project.id}>
-                  <span className="bold-label">{project.clientName || '-'}</span>
-                  <span>{project.projectName}</span>
-                  <span>{project.projectCost || '-'}</span>
-                  <span>{project.consultancyFee || '-'}</span>
-                  <span>{project.workOrderDate || '-'}</span>
-                  <span>{project.completionCertificateDate || '-'}</span>
-                  <div className="row-actions">
-                    <button type="button" className="view-row-btn" onClick={() => setViewingProjectDocuments(project)}>View</button>
-                    {(project.workOrderDocumentPreview || project.completionCertificateDocumentPreview || project.otherProjectDocumentsPreview?.length > 0) && (
-                      <button type="button" className="view-docs-btn" onClick={() => setViewingProjectDocuments(project)}>Docs</button>
-                    )}
-                    <button type="button" className="edit-row-btn" onClick={() => {
-                        setEditingProjectId(project.id)
-                        setProjectDraft(project)
-                        setShowProjectForm(true)
-                      }}>Edit</button>
-                    <button type="button" className="delete-row-btn" onClick={() => handleRemoveProject(project.id)}>Delete</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <DetailsDataTable
+            columns={columns}
+            data={projects}
+            emptyMessage="No project added yet."
+          />
 
           {viewingProjectDocuments && (
             <div className="modal-overlay">
