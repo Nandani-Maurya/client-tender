@@ -22,26 +22,29 @@ const alerts = {
     })
   },
   error: (title, text) => {
+    const isHtml = typeof text === 'string' && text.includes('<');
     return premiumSwal.fire({
       icon: 'error',
       title,
-      text,
+      ...(isHtml ? { html: text } : { text }),
       confirmButtonText: 'Try Again',
     })
   },
   info: (title, text) => {
+    const isHtml = typeof text === 'string' && text.includes('<');
     return premiumSwal.fire({
       icon: 'info',
       title,
-      text,
+      ...(isHtml ? { html: text } : { text }),
       confirmButtonText: 'Okay',
     })
   },
   warning: (title, text) => {
+    const isHtml = typeof text === 'string' && text.includes('<');
     return premiumSwal.fire({
       icon: 'warning',
       title,
-      text,
+      ...(isHtml ? { html: text } : { text }),
       confirmButtonText: 'Okay',
     })
   },

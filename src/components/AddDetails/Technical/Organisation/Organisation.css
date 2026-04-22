@@ -48,6 +48,169 @@
   border-radius: 8px;
 }
 
+.section-save-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.organisation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.org-fields--disabled input,
+.org-fields--disabled select {
+  background: #e4e9f1;
+  border-color: #c5cede;
+  color: #5f6876;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.org-fields--disabled input::placeholder {
+  color: #7f8999;
+}
+
+.org-fields--disabled input:disabled,
+.org-fields--disabled select:disabled {
+  opacity: 1;
+  background-color: #e4e9f1;
+}
+
+
+.org-fields--disabled .add-more-section-btn {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.org-fields--disabled .add-more-section-btn:hover {
+  transform: none;
+  background: #eef3fb;
+}
+
+.org-fields--disabled .delete-entry-btn {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.org-fields--disabled .delete-entry-btn:hover {
+  background: #ffffff;
+  color: inherit;
+  border-color: #cfd9ef;
+  transform: none;
+}
+
+.org-cancel-btn {
+  min-height: 40px;
+  border: 1px solid #cfd9ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #39445f;
+  padding: 0 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.06);
+}
+
+.org-cancel-btn:hover {
+  background: #f4f7fc;
+  border-color: #bfcbe0;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.10);
+}
+
+.org-cancel-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.06);
+}
+
+.org-cancel-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f8fafc;
+  transform: none;
+  box-shadow: none;
+}
+
+.save-all-details-btn:disabled {
+  background: #9fb5e8;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.save-all-details-btn:disabled:hover {
+  background: #9fb5e8;
+  transform: none;
+}
+
+.org-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #dce4f4;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 24px rgba(18, 41, 88, 0.06);
+}
+
+.org-status-banner--empty {
+  border-color: #f2d18f;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff3d9 100%);
+}
+
+.org-status-banner--view {
+  border-color: #cfe1ff;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+}
+
+.org-status-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  font-weight: 800;
+  color: #8a5a00;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(138, 90, 0, 0.18);
+}
+
+.org-status-mark--view {
+  color: #2352a7;
+  border-color: rgba(35, 82, 167, 0.18);
+}
+
+.org-status-copy {
+  min-width: 0;
+}
+
+.org-status-banner h4 {
+  margin: 0 0 4px;
+  color: #17213e;
+  font-size: 15px;
+}
+
+.org-status-banner p {
+  margin: 0;
+  color: #5b6688;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.org-status-action {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 @media (max-width: 1024px) {
   .branch-entry-form,
   .partner-entry-form {
@@ -56,6 +219,23 @@
 
   .contact-entry-form {
     grid-template-columns: 1fr;
+  }
+
+  .org-status-banner {
+    flex-direction: column;
+  }
+
+  .org-status-action {
+    margin-left: 0;
+  }
+
+  .organisation-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .organisation-actions button {
+    flex: 1 1 180px;
   }
 }
 

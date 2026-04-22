@@ -91,6 +91,19 @@ function ProjectTypes() {
     }
   }
 
+  const handleCancelProjectType = async () => {
+    const confirm = await alerts.confirm(
+      'Cancel changes?',
+      'Are you sure you want to cancel? Unsaved changes will be lost.',
+    )
+
+    if (confirm.isConfirmed) {
+      setProjectTypeMode('list')
+      setEditingProjectTypeId(null)
+      setProjectTypeDraft({ type_name: '' })
+    }
+  }
+
   const columns = useMemo(() => [
     {
       accessorKey: 'type_name',
@@ -174,7 +187,10 @@ function ProjectTypes() {
         <div className="premium-compact-form">
           <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
             <label className="details-field">
-              <span>Type Name *</span>
+              <span className="field-label-line">
+                <span className="field-label-text">Type Name</span>
+                <span className="required-star">*</span>
+              </span>
               <input
                 type="text"
                 name="type_name"
@@ -192,14 +208,10 @@ function ProjectTypes() {
             </button>
             <button 
               type="button" 
-              onClick={() => {
-                setProjectTypeMode('list')
-                setEditingProjectTypeId(null)
-                setProjectTypeDraft({ type_name: '' })
-              }}
+              onClick={handleCancelProjectType}
               className="cancel-btn"
             >
-              Back to List
+              Cancel
             </button>
           </div>
         </div>

@@ -104,6 +104,22 @@ function TenderCategories() {
     }
   };
 
+  const handleCancelTenderCategory = async () => {
+    const confirm = await alerts.confirm(
+      "Cancel changes?",
+      "Are you sure you want to cancel? Unsaved changes will be lost.",
+    );
+
+    if (confirm.isConfirmed) {
+      setTenderCategoryMode("list");
+      setEditingTenderCategoryId(null);
+      setTenderCategoryDraft({
+        category_name: "",
+        category_description: "",
+      });
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -212,7 +228,10 @@ function TenderCategories() {
         <div className="premium-compact-form">
           <div className="details-grid">
             <label className="details-field">
-              <span>Category Value (Short Form) *</span>
+              <span className="field-label-line">
+                <span className="field-label-text">Category Value (Short Form)</span>
+                <span className="required-star">*</span>
+              </span>
               <input
                 type="text"
                 name="category_name"
@@ -223,7 +242,10 @@ function TenderCategories() {
               />
             </label>
             <label className="details-field">
-              <span>Full Description</span>
+              <span className="field-label-line">
+                <span className="field-label-text">Full Description</span>
+                <span className="required-star">*</span>
+              </span>
               <input
                 type="text"
                 name="category_description"
@@ -244,17 +266,10 @@ function TenderCategories() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setTenderCategoryMode("list");
-                setEditingTenderCategoryId(null);
-                setTenderCategoryDraft({
-                  category_name: "",
-                  category_description: "",
-                });
-              }}
+              onClick={handleCancelTenderCategory}
               className="cancel-btn"
             >
-              Back to List
+              Cancel
             </button>
           </div>
         </div>

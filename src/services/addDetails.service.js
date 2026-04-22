@@ -30,11 +30,11 @@ export const saveIsoCertificates = async (payload) => {
 };
 
 
-export const getBankDetails = async (orgId) => {
-  return request(`/add-details/bank/${orgId}`);
+export const getBankDetails = async () => {
+  return request('/add-details/bank');
 };
 
 
-export const getIsoCertificates = async (orgId) => {
-  return request(`/add-details/iso/${orgId}`);
+export const getIsoCertificates = async () => {
+  return request('/add-details/iso');
 };

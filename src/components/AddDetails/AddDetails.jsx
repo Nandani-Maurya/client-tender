@@ -1,5 +1,4 @@
 import { useState, useEffect, memo } from 'react'
-import * as projectTypeService from '../../services/projectType.service'
 import TenderCategories from './Technical/TenderCategories/TenderCategories'
 import ProjectTypes from './Technical/ProjectTypes/ProjectTypes'
 import IsoCertificates from './Technical/IsoCertificates/IsoCertificates'
@@ -24,25 +23,7 @@ const MemoFinancialDetails = memo(FinancialDetails)
 function AddDetails() {
   const [activeTab, setActiveTab] = useState('technical')
   const [activeTechnicalTab, setActiveTechnicalTab] = useState('tenderCategories')
-  const [activeOrgId, setActiveOrgId] = useState(null)
-  const [projectTypes, setProjectTypes] = useState([])
-
-  // useEffect(() => { fetchProjectTypes() }, [])
-
-  // async function fetchProjectTypes() {
-  //   try {
-  //     const resp = await projectTypeService.getProjectTypes()
-  //     if (resp.success) {
-  //       setProjectTypes(resp.data)
-  //     }
-  //   } catch (err) {
-  //     console.error('Failed to load project types', err)
-  //   }
-  // }
-
-  const handleOrgSaved = (orgId) => {
-    setActiveOrgId(orgId);
-  }
+  const projectTypes = []
 
   return (
     <section className="add-details-page">
@@ -87,9 +68,9 @@ function AddDetails() {
             <div className="technical-tab-content">
               {activeTechnicalTab === 'tenderCategories' && <MemoTenderCategories />}
               {activeTechnicalTab === 'projectTypes' && <MemoProjectTypes />}
-              {activeTechnicalTab === 'organisation' && <MemoOrganisation activeOrgId={activeOrgId} onOrgSaved={handleOrgSaved} />}
-              {activeTechnicalTab === 'iso' && <MemoIsoCertificates activeOrgId={activeOrgId} />}
-              {activeTechnicalTab === 'bank' && <MemoBankDetails activeOrgId={activeOrgId} />}
+              {activeTechnicalTab === 'organisation' && <MemoOrganisation />}
+              {activeTechnicalTab === 'iso' && <MemoIsoCertificates />}
+              {activeTechnicalTab === 'bank' && <MemoBankDetails />}
               {activeTechnicalTab === 'projects' && <MemoProjectExperience projectTypes={projectTypes} />}
               {activeTechnicalTab === 'employees' && <MemoEmployeeBioData />}
               {activeTechnicalTab === 'documents' && <MemoDocuments />}

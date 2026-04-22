@@ -202,6 +202,27 @@
   gap: 6px;
 }
 
+.field-label-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.field-label-text {
+  display: inline-block;
+}
+
+.subheading-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.subheading-text {
+  display: inline-block;
+}
+
 .project-row span,
 .employee-row span,
 .bank-row span,
@@ -243,6 +264,29 @@
   color: #344060;
   font-size: 12px;
   font-weight: 600;
+}
+
+.details-field .required-star {
+  color: #d62828;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.office-block h4 .required-star {
+  color: #d62828;
+  font-weight: 700;
+  font-size: 16px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.subheading-required .required-star {
+  color: #d62828;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
 }
 
 .details-field input,
@@ -324,6 +368,22 @@
 .save-btn:hover, .save-all-details-btn:hover {
   background: #1e4bc3;
   transform: translateY(-1px);
+}
+
+.save-btn:disabled,
+.save-all-details-btn:disabled {
+  background: #9fb5e8;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.save-btn:disabled:hover,
+.save-all-details-btn:disabled:hover {
+  background: #9fb5e8;
+  transform: none;
 }
 
 .cancel-btn {
@@ -416,12 +476,39 @@
   border: 1px solid #cfd9ef;
   border-radius: 6px;
   background: #ffffff;
-  color: #344060;
-  padding: 4px 10px;
-  font-size: 12px;
+  color: transparent;
+  padding: 6px 10px;
+  font-size: 0;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  min-width: 36px;
+}
+
+.delete-entry-btn::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: #c53030;
+  transition: background-color 0.18s ease;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M9%203h6l1%202h4v2H4V5h4l1-2Zm1%207h2v9h-2v-9Zm4%200h2v9h-2v-9ZM7%2010h2v9H7v-9ZM6%207h12l-1%2014H7L6%207Z%27%20fill%3D%27%23000%27%2F%3E%3C%2Fsvg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M9%203h6l1%202h4v2H4V5h4l1-2Zm1%207h2v9h-2v-9Zm4%200h2v9h-2v-9ZM7%2010h2v9H7v-9ZM6%207h12l-1%2014H7L6%207Z%27%20fill%3D%27%23000%27%2F%3E%3C%2Fsvg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.delete-entry-btn:hover {
+  color: transparent;
+}
+
+.delete-entry-btn:hover::before {
+  background-color: #a61b1b;
 }
 
 /* Modal Stylings */
@@ -600,3 +687,4 @@
     padding: 10px;
   }
 }
+

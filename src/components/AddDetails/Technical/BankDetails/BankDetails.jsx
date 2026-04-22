@@ -18,7 +18,7 @@ const initialBankDraft = {
   passbookPreview: ''
 }
 
-function BankDetails({ activeOrgId }) {
+function BankDetails() {
   const [banks, setBanks] = useState([])
   const [bankDraft, setBankDraft] = useState(initialBankDraft)
   const [editingBankId, setEditingBankId] = useState(null)
@@ -27,14 +27,12 @@ function BankDetails({ activeOrgId }) {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    if (activeOrgId) {
-      fetchBankDetails(activeOrgId)
-    }
-  }, [activeOrgId])
+    fetchBankDetails()
+  }, [])
 
-  async function fetchBankDetails(orgId) {
+  async function fetchBankDetails() {
     try {
-      const res = await addDetailsService.getBankDetails(orgId);
+      const res = await addDetailsService.getBankDetails();
       if (res.success && res.data) {
         setBanks(res.data.map((bank, i) => ({
           id: `bank-fetch-${Date.now()}-${i}`,
@@ -102,22 +100,18 @@ function BankDetails({ activeOrgId }) {
 
   const handleSaveBank = async () => {
     if (!bankDraft.bankName.trim() || !bankDraft.accountNumber.trim()) {
-      return alerts.warning('Required', 'Bank Name and Account Number are required')
-    }
-
-    if (!activeOrgId) {
-      return alerts.warning('Wait', 'Please save Basic Organization Details first.')
+      return alerts.info('Info', 'Bank Name and Account Number are required')
     }
 
     setIsSaving(true)
     try {
-      const isEdit = !!editingBankId;
-      const bankId = isEdit ? editingBankId : `bank-${Date.now()}`;
-      const updatedBank = { id: bankId, ...bankDraft };
-      
-      const newBanks = isEdit 
+      const isEdit = !!editingBankId
+      const bankId = isEdit ? editingBankId : `bank-${Date.now()}`
+      const updatedBank = { id: bankId, ...bankDraft }
+
+      const newBanks = isEdit
         ? banks.map(b => b.id === editingBankId ? updatedBank : b)
-        : [...banks, updatedBank];
+        : [...banks, updatedBank]
 
       alerts.info('Saving...', 'Saving bank details please wait.')
 
@@ -134,7 +128,6 @@ function BankDetails({ activeOrgId }) {
       }))
 
       const res = await addDetailsService.saveBankDetails({
-        organization_id: activeOrgId,
         bank_details: bankPayload
       })
 
@@ -145,7 +138,7 @@ function BankDetails({ activeOrgId }) {
         setEditingBankId(null)
         alerts.success('Success', isEdit ? 'Bank updated' : 'Bank added')
       } else {
-        alerts.error('Error', res.message)
+        alerts.info('Info', res.message)
       }
     } catch (err) {
       console.error(err)
@@ -160,26 +153,24 @@ function BankDetails({ activeOrgId }) {
     if (!confirm.isConfirmed) return
 
     const newBanks = banks.filter(bank => bank.id !== bankId)
-    
-    if (activeOrgId) {
-      try {
-        const bankPayload = newBanks.map(b => ({
-          bank_name: b.bankName,
-          branch_name: b.branchName,
-          account_holder_name: b.accountHolderName,
-          account_number: b.accountNumber,
-          ifsc_code: b.ifscCode,
-          account_type: b.accountType,
-          upi_id: b.upiId,
-          bank_statement_id: b.existingBankStatementId || null,
-          passbook_id: b.existingPassbookId || null
-        }))
-        await addDetailsService.saveBankDetails({ organization_id: activeOrgId, bank_details: bankPayload })
-      } catch (err) {
-        console.error(err)
-      }
+    try {
+      const bankPayload = newBanks.map(b => ({
+        bank_name: b.bankName,
+        branch_name: b.branchName,
+        account_holder_name: b.accountHolderName,
+        account_number: b.accountNumber,
+        ifsc_code: b.ifscCode,
+        account_type: b.accountType,
+        upi_id: b.upiId,
+        bank_statement_id: b.existingBankStatementId || null,
+        passbook_id: b.existingPassbookId || null
+      }))
+      await addDetailsService.saveBankDetails({ bank_details: bankPayload })
+      setBanks(newBanks)
+    } catch (err) {
+      console.error(err)
+      alerts.error('Error', 'Failed to delete bank account')
     }
-    setBanks(newBanks)
   }
 
   const columns = useMemo(() => [
@@ -232,12 +223,12 @@ function BankDetails({ activeOrgId }) {
         )
       }
     }
-  ], [handleRemoveBank])
+  ], [])
 
   return (
     <section className="details-section">
       <h3>Bank Details Management</h3>
-      <p className="section-helper">Manage multiple bank accounts and associated documents for the organization.</p>
+      <p className="section-helper">Manage multiple bank accounts and associated documents.</p>
 
       {!showBankForm ? (
         <>
@@ -256,7 +247,7 @@ function BankDetails({ activeOrgId }) {
               <div className="modal-content">
                 <div className="modal-header">
                   <h4>{viewingBankDocuments.bankName} Details</h4>
-                  <button type="button" className="modal-close-btn" onClick={() => setViewingBankDocuments(null)}>✕</button>
+                  <button type="button" className="modal-close-btn" onClick={() => setViewingBankDocuments(null)}>âœ•</button>
                 </div>
                 <div className="modal-body">
                   <div className="card-look">
@@ -283,8 +274,6 @@ function BankDetails({ activeOrgId }) {
               </div>
             </div>
           )}
-
-
         </>
       ) : (
         <div className="bank-form premium-card mt-2">
@@ -319,7 +308,7 @@ function BankDetails({ activeOrgId }) {
                   </div>
                 ) : (
                   <label className="image-upload-field">
-                    <span>📄 Click to Upload Statement</span>
+                    <span>ðŸ“„ Click to Upload Statement</span>
                     <input type="file" onChange={(e) => handleBankImageChange(e, 'statement')} />
                   </label>
                 )}
@@ -334,7 +323,7 @@ function BankDetails({ activeOrgId }) {
                   </div>
                 ) : (
                   <label className="image-upload-field">
-                    <span>📄 Click to Upload Passbook</span>
+                    <span>ðŸ“„ Click to Upload Passbook</span>
                     <input type="file" onChange={(e) => handleBankImageChange(e, 'passbook')} />
                   </label>
                 )}
