@@ -11,21 +11,21 @@ function TenderCategories() {
   const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null);
   const [viewingCategory, setViewingCategory] = useState(null);
 
-  useEffect(() => {
-    const fetchTenderCategories = async () => {
-      try {
-        const resp = await categoryService.getTenderCategories();
-        if (resp.success) {
-          setTenderCategories(resp.data);
-        } else {
-          alerts.error("Error", resp.message || "Failed to load categories");
-        }
-      } catch (err) {
-        alerts.error("Error", "Failed to load categories");
-        console.error("Failed to load categories", err);
+  const fetchTenderCategories = async () => {
+    try {
+      const resp = await categoryService.getTenderCategories();
+      if (resp.success) {
+        setTenderCategories(resp.data);
+      } else {
+        alerts.error("Error", resp.message || "Failed to load categories");
       }
-    };
+    } catch (err) {
+      alerts.error("Error", "Failed to load categories");
+      console.error("Failed to load categories", err);
+    }
+  };
 
+  useEffect(() => {
     fetchTenderCategories();
   }, []);
 
@@ -54,15 +54,8 @@ function TenderCategories() {
       } else {
         resp = await categoryService.createTenderCategory(tenderCategoryDraft);
       }
-      console.log("here", resp);
       if (resp.success) {
-        if (isEditing) {
-          setTenderCategories((prev) =>
-            prev.map((c) => (c.id === editingTenderCategoryId ? resp.data : c)),
-          );
-        } else {
-          setTenderCategories((prev) => [resp.data, ...prev]);
-        }
+        await fetchTenderCategories();
 
         setTenderCategoryMode("list");
         setTenderCategoryDraft({ category_name: "", category_description: "" });
@@ -104,7 +97,7 @@ function TenderCategories() {
       try {
         const resp = await categoryService.deleteTenderCategory(id);
         if (resp.success) {
-          setTenderCategories((prev) => prev.filter((c) => c.id !== id));
+          await fetchTenderCategories();
           alerts.success("Deleted", "Category deleted successfully");
         }
       } catch {
