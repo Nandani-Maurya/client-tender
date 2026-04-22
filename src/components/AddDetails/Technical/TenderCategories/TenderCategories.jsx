@@ -70,11 +70,7 @@ function TenderCategories() {
         alerts.info("Info", resp.message);
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to save category";
-      alerts.error("Error", errorMessage);
+      alerts.error("Error", error.message || "Failed to save category");
       console.error("Debug Error:", error);
     }
   };
@@ -93,15 +89,17 @@ function TenderCategories() {
       "Are you sure?",
       "You want to delete this record?",
     );
-    if (confirm.isConfirmed) {
+      if (confirm.isConfirmed) {
       try {
         const resp = await categoryService.deleteTenderCategory(id);
         if (resp.success) {
           await fetchTenderCategories();
           alerts.success("Deleted", "Category deleted successfully");
+        } else {
+          alerts.info("Info", resp.message || "Unable to delete category");
         }
-      } catch {
-        alerts.error("Error", "Failed to delete category");
+      } catch (error) {
+        alerts.error("Error", error.message || "Failed to delete category");
       }
     }
   };

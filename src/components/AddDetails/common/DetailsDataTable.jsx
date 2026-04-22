@@ -61,12 +61,14 @@ function DetailsDataTable({ columns, data, emptyMessage = 'No records found.' })
       size: 'small',
       variant: 'outlined',
       className: 'details-table-search',
-      InputProps: {
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchRoundedIcon fontSize="small" className="details-table-search-icon" />
-          </InputAdornment>
-        )
+      slotProps: {
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchRoundedIcon fontSize="small" className="details-table-search-icon" />
+            </InputAdornment>
+          )
+        }
       },
       sx: {
         minWidth: { xs: '100%', sm: 320 }

@@ -13,20 +13,23 @@ function ProjectTypes() {
   const [editingProjectTypeId, setEditingProjectTypeId] = useState(null)
   const [viewingType, setViewingType] = useState(null)
 
-  useEffect(() => {
-    fetchProjectTypes()
-  }, [])
-
   async function fetchProjectTypes() {
     try {
       const resp = await projectTypeService.getProjectTypes()
       if (resp.success) {
         setProjectTypes(resp.data)
+      } else {
+        alerts.info('Info', resp.message || 'Failed to load project types')
       }
     } catch (err) {
+      alerts.error('Error', 'Failed to load project types')
       console.error('Failed to load project types', err)
     }
   }
+
+  useEffect(() => {
+    fetchProjectTypes()
+  }, [])
 
   const handleProjectTypeDraftChange = (e) => {
     const { name, value } = e.target
@@ -35,7 +38,7 @@ function ProjectTypes() {
 
   const handleSaveProjectType = async () => {
     if (!projectTypeDraft.type_name.trim()) {
-      return alerts.error('Required', 'Project type name is required')
+      return alerts.info('Info', 'Project type name is required')
     }
 
     const isEditing = !!editingProjectTypeId
@@ -49,21 +52,17 @@ function ProjectTypes() {
       }
 
       if (resp.success) {
-        if (isEditing) {
-          setProjectTypes(prev => prev.map(t => t.id === editingProjectTypeId ? resp.data : t))
-        } else {
-          setProjectTypes(prev => [...prev, resp.data])
-        }
+        await fetchProjectTypes()
 
         setProjectTypeMode('list')
         setProjectTypeDraft({ type_name: '' })
         setEditingProjectTypeId(null)
         alerts.success('Success', isEditing ? 'Project type updated' : 'Project type added')
       } else {
-        alerts.error('Error', resp.message)
+        alerts.info('Info', resp.message)
       }
-    } catch {
-      alerts.error('Error', 'API Connection failed')
+    } catch (error) {
+      alerts.error('Error', error.message || 'API Connection failed')
     }
   }
 
@@ -81,11 +80,13 @@ function ProjectTypes() {
       try {
         const resp = await projectTypeService.deleteProjectType(id)
         if (resp.success) {
-          setProjectTypes(prev => prev.filter(t => t.id !== id))
+          await fetchProjectTypes()
           alerts.success('Deleted', 'Project type deleted successfully')
+        } else {
+          alerts.info('Info', resp.message || 'Unable to delete project type')
         }
-      } catch {
-        alerts.error('Error', 'Failed to delete')
+      } catch (error) {
+        alerts.error('Error', error.message || 'Failed to delete')
       }
     }
   }
@@ -187,7 +188,7 @@ function ProjectTypes() {
 
           <div className="form-submit-actions">
             <button type="button" onClick={handleSaveProjectType} className="save-btn">
-              Save
+              {editingProjectTypeId ? 'Update' : 'Save'}
             </button>
             <button 
               type="button" 

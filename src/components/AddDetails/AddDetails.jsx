@@ -27,18 +27,18 @@ function AddDetails() {
   const [activeOrgId, setActiveOrgId] = useState(null)
   const [projectTypes, setProjectTypes] = useState([])
 
-  useEffect(() => { fetchProjectTypes() }, [])
+  // useEffect(() => { fetchProjectTypes() }, [])
 
-  async function fetchProjectTypes() {
-    try {
-      const resp = await projectTypeService.getProjectTypes()
-      if (resp.success) {
-        setProjectTypes(resp.data)
-      }
-    } catch (err) {
-      console.error('Failed to load project types', err)
-    }
-  }
+  // async function fetchProjectTypes() {
+  //   try {
+  //     const resp = await projectTypeService.getProjectTypes()
+  //     if (resp.success) {
+  //       setProjectTypes(resp.data)
+  //     }
+  //   } catch (err) {
+  //     console.error('Failed to load project types', err)
+  //   }
+  // }
 
   const handleOrgSaved = (orgId) => {
     setActiveOrgId(orgId);
