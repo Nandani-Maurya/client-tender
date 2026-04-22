@@ -19,9 +19,9 @@ function DetailsDataTable({ columns, data, emptyMessage = 'No records found.' })
     layoutMode: 'semantic',
     paginationDisplayMode: 'pages',
     defaultColumn: {
-      minSize: 190,
-      size: 190,
-      maxSize: 190
+      minSize: 120,
+      size: 150,
+      maxSize: 320
     },
     initialState: {
       density: 'compact',
@@ -29,7 +29,7 @@ function DetailsDataTable({ columns, data, emptyMessage = 'No records found.' })
       pagination: { pageIndex: 0, pageSize: 10 }
     },
     muiTableProps: {
-      sx: { tableLayout: 'fixed' }
+      sx: { tableLayout: 'auto' }
     },
     muiTableHeadCellProps: {
       align: 'center',

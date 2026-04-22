@@ -97,8 +97,6 @@ function IsoCertificates({ activeOrgId }) {
         ? isoCertificates.map(c => c.id === editingIsoId ? updatedIso : c)
         : [...isoCertificates, updatedIso];
 
-      alerts.info('Uploading...', 'Uploading documents and saving details please wait.')
-
       const processedIso = []
       for (const iso of newIsoList) {
         let firstDocId = null;

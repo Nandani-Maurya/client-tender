@@ -1,36 +1,61 @@
 .app-shell {
-  height: 100dvh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
   padding: clamp(10px, 2vw, 18px);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: radial-gradient(circle at top left, rgba(31, 76, 255, 0.18), transparent 32%),
     radial-gradient(circle at bottom right, rgba(10, 167, 172, 0.14), transparent 28%),
     linear-gradient(135deg, #f7f9ff 0%, #eef4ff 40%, #f8f8fb 100%);
 }
 
-main {
+.app-shell--dashboard {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app-shell-main {
   position: relative;
   z-index: 1;
   flex: 1;
   min-height: 0;
   display: flex;
+  width: 100%;
+  min-width: 0;
 }
 
-main > * {
+.app-shell--dashboard .app-shell-main {
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-shell-main > * {
   flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.app-shell--dashboard .app-shell-main > * {
   min-height: 0;
 }
 
 @media (max-width: 768px) {
+  .app-shell {
+    padding: 10px;
+  }
+
   .brandbar {
     margin-bottom: 12px;
   }
 }
 
 @media (max-width: 680px) {
+  .app-shell {
+    padding: 8px;
+  }
+
   .brandbar {
     align-items: flex-start;
     text-align: left;

@@ -29,12 +29,16 @@
   font-size: 12px;
   font-weight: 700;
   border-bottom: 1px solid #dce4f4;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .details-mrt-wrapper .MuiTableBody-root .MuiTableCell-root {
   color: #334160;
   font-size: 12px;
   border-bottom: 1px solid #eef3fb;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .details-mrt-wrapper .MuiTableHead-root .MuiTableCell-root,
@@ -110,15 +114,31 @@
   width: 100%;
   justify-content: center;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .details-mrt-wrapper .row-actions button {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .details-mrt-wrapper .empty-project-row {
   margin: 0;
   background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .details-mrt-wrapper .MuiToolbar-root:first-of-type {
+    padding: 8px 10px;
+  }
+
+  .details-mrt-wrapper .MuiTableHead-root .MuiTableCell-root,
+  .details-mrt-wrapper .MuiTableBody-root .MuiTableCell-root {
+    padding: 8px 6px;
+  }
+
+  .details-mrt-wrapper .MuiTablePagination-toolbar {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }

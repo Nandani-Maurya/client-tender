@@ -47,3 +47,21 @@
   border: 1px solid #dce4f4;
   border-radius: 8px;
 }
+
+@media (max-width: 1024px) {
+  .branch-entry-form,
+  .partner-entry-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-entry-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .branch-entry-form,
+  .partner-entry-form {
+    grid-template-columns: 1fr;
+  }
+}

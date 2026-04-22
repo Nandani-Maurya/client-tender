@@ -25,7 +25,6 @@ function Signup() {
     if (loading) return
 
     setLoading(true)
-    alerts.loading('Creating Account...', 'Setting up your profile')
 
     try {
       const data = await signupUser(form)
@@ -154,7 +153,6 @@ function Signup() {
 }
 
 export default Signup
-
 
 
 

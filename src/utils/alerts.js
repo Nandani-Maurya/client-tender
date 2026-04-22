@@ -19,7 +19,6 @@ const alerts = {
       text,
       timer: 2500,
       showConfirmButton: false,
-      timerProgressBar: true,
     })
   },
   error: (title, text) => {
@@ -33,6 +32,14 @@ const alerts = {
   info: (title, text) => {
     return premiumSwal.fire({
       icon: 'info',
+      title,
+      text,
+      confirmButtonText: 'Okay',
+    })
+  },
+  warning: (title, text) => {
+    return premiumSwal.fire({
+      icon: 'warning',
       title,
       text,
       confirmButtonText: 'Okay',

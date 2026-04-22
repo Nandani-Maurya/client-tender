@@ -23,7 +23,6 @@ function Login() {
     if (loading) return
 
     setLoading(true)
-    alerts.loading('Authenticating...', 'Verifying your identity')
 
     try {
       const data = await loginUser(form)

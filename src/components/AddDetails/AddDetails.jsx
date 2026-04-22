@@ -70,33 +70,35 @@ function AddDetails() {
         </button>
       </div>
 
-      {activeTab === 'technical' ? (
-        <div className="technical-form">
-          <div className="technical-subtabs">
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'tenderCategories' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('tenderCategories')}>Tender Categories</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'projectTypes' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('projectTypes')}>Project Types</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'organisation' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('organisation')}>Organization Details</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'iso' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('iso')}>ISO Certificates</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'bank' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('bank')}>Bank Details</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('projects')}>Project Experience</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('employees')}>Employee Bio-data</button>
-            <button type="button" className={`technical-subtab ${activeTechnicalTab === 'documents' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('documents')}>Documents</button>
-          </div>
+      <div className="details-panel">
+        {activeTab === 'technical' ? (
+          <div className="technical-form">
+            <div className="technical-subtabs">
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'tenderCategories' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('tenderCategories')}>Tender Categories</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'projectTypes' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('projectTypes')}>Project Types</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'organisation' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('organisation')}>Organization Details</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'iso' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('iso')}>ISO Certificates</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'bank' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('bank')}>Bank Details</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('projects')}>Project Experience</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('employees')}>Employee Bio-data</button>
+              <button type="button" className={`technical-subtab ${activeTechnicalTab === 'documents' ? 'active' : ''}`} onClick={() => setActiveTechnicalTab('documents')}>Documents</button>
+            </div>
 
-          <div className="technical-tab-content">
-            {activeTechnicalTab === 'tenderCategories' && <MemoTenderCategories />}
-            {activeTechnicalTab === 'projectTypes' && <MemoProjectTypes />}
-            {activeTechnicalTab === 'organisation' && <MemoOrganisation activeOrgId={activeOrgId} onOrgSaved={handleOrgSaved} />}
-            {activeTechnicalTab === 'iso' && <MemoIsoCertificates activeOrgId={activeOrgId} />}
-            {activeTechnicalTab === 'bank' && <MemoBankDetails activeOrgId={activeOrgId} />}
-            {activeTechnicalTab === 'projects' && <MemoProjectExperience projectTypes={projectTypes} />}
-            {activeTechnicalTab === 'employees' && <MemoEmployeeBioData />}
-            {activeTechnicalTab === 'documents' && <MemoDocuments />}
+            <div className="technical-tab-content">
+              {activeTechnicalTab === 'tenderCategories' && <MemoTenderCategories />}
+              {activeTechnicalTab === 'projectTypes' && <MemoProjectTypes />}
+              {activeTechnicalTab === 'organisation' && <MemoOrganisation activeOrgId={activeOrgId} onOrgSaved={handleOrgSaved} />}
+              {activeTechnicalTab === 'iso' && <MemoIsoCertificates activeOrgId={activeOrgId} />}
+              {activeTechnicalTab === 'bank' && <MemoBankDetails activeOrgId={activeOrgId} />}
+              {activeTechnicalTab === 'projects' && <MemoProjectExperience projectTypes={projectTypes} />}
+              {activeTechnicalTab === 'employees' && <MemoEmployeeBioData />}
+              {activeTechnicalTab === 'documents' && <MemoDocuments />}
+            </div>
           </div>
-        </div>
-      ) : (
-        <MemoFinancialDetails />
-      )}
+        ) : (
+          <MemoFinancialDetails />
+        )}
+      </div>
     </section>
   )
 }

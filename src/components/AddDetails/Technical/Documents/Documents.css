@@ -34,8 +34,47 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   padding: 12px;
   background: #f8faff;
   border-radius: 8px;
   margin-bottom: 10px;
+}
+
+.add-document-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.add-document-form input {
+  flex: 1 1 220px;
+  min-height: 38px;
+  border: 1px solid #cfd9ef;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.add-document-form button,
+.additional-document-item button {
+  min-height: 36px;
+  border: 1px solid #cfd9ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344060;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .upload-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .additional-document-item {
+    align-items: stretch;
+  }
 }

@@ -25,3 +25,67 @@
   border-radius: 12px;
   border: 1px solid #dce4f4;
 }
+
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qualification-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.qualification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #dce4f4;
+  border-radius: 8px;
+  background: #ffffff;
+  margin-bottom: 8px;
+}
+
+.qualification-item button {
+  border: 1px solid #cfd9ef;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #3f4c70;
+  cursor: pointer;
+  min-height: 28px;
+  min-width: 28px;
+}
+
+.add-qual-action {
+  display: flex;
+  align-items: flex-end;
+}
+
+.add-qual-btn {
+  min-height: 38px;
+  border: 1px solid #2d6eff;
+  border-radius: 8px;
+  background: #2d6eff;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .employee-grid,
+  .qualification-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .employee-grid,
+  .qualification-grid {
+    grid-template-columns: 1fr;
+  }
+}

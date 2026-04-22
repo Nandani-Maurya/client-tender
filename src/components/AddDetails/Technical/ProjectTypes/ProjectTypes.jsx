@@ -39,7 +39,6 @@ function ProjectTypes() {
     }
 
     const isEditing = !!editingProjectTypeId
-    alerts.loading(isEditing ? 'Updating...' : 'Saving...', isEditing ? 'Updating project type' : 'Adding project type')
 
     try {
       let resp

@@ -1,154 +1,182 @@
-import { useState, useEffect, useMemo } from 'react'
-import alerts from '../../../../utils/alerts'
-import * as categoryService from '../../../../services/category.service'
-import DetailsDataTable from '../../common/DetailsDataTable'
-import './TenderCategories.css'
+import { useState, useEffect, useMemo } from "react";
+import alerts from "../../../../utils/alerts";
+import * as categoryService from "../../../../services/category.service";
+import DetailsDataTable from "../../common/DetailsDataTable";
+import "./TenderCategories.css";
 
 function TenderCategories() {
-  const [tenderCategories, setTenderCategories] = useState([])
-  const [tenderCategoryMode, setTenderCategoryMode] = useState('list')
-  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({category_name: '', category_description: ''})
-  const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null)
-  const [viewingCategory, setViewingCategory] = useState(null)
-  useEffect(() => { fetchTenderCategories()}, [])
+  const [tenderCategories, setTenderCategories] = useState([]);
+  const [tenderCategoryMode, setTenderCategoryMode] = useState("list");
+  const [tenderCategoryDraft, setTenderCategoryDraft] = useState({category_name: "", category_description: "",});
+  const [editingTenderCategoryId, setEditingTenderCategoryId] = useState(null);
+  const [viewingCategory, setViewingCategory] = useState(null);
 
-  async function fetchTenderCategories() {
-    try {
-      const resp = await categoryService.getTenderCategories()
-      if (resp.success) {
-        setTenderCategories(resp.data)
+  useEffect(() => {
+    const fetchTenderCategories = async () => {
+      try {
+        const resp = await categoryService.getTenderCategories();
+        if (resp.success) {
+          setTenderCategories(resp.data);
+        } else {
+          alerts.error("Error", resp.message || "Failed to load categories");
+        }
+      } catch (err) {
+        alerts.error("Error", "Failed to load categories");
+        console.error("Failed to load categories", err);
       }
-      else{
-        alerts.error('Error', resp.message || 'Failed to load categories')
-      }
-    } catch (err) {
-      alerts.error('Error', 'Failed to load categories')
-      console.error('Failed to load categories', err)
-    }
-  }
+    };
+
+    fetchTenderCategories();
+  }, []);
 
   const handleTenderCategoryDraftChange = (e) => {
-    const { name, value } = e.target
-    setTenderCategoryDraft(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setTenderCategoryDraft((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSaveTenderCategory = async () => {
     if (!tenderCategoryDraft.category_name.trim()) {
-      return alerts.error('Required', 'Category value is required')
+      return alerts.info("Info", "Category value is required");
+    }
+    if (!tenderCategoryDraft.category_description.trim()) {
+      return alerts.info("Info", "Category description is required");
     }
 
-    const isEditing = !!editingTenderCategoryId
-    alerts.loading(isEditing ? 'Updating...' : 'Saving...', isEditing ? 'Updating tender category' : 'Adding new tender category')
-    
-    try {
-      let resp
-      if (isEditing) {
-        resp = await categoryService.updateTenderCategory(editingTenderCategoryId, tenderCategoryDraft)
-      } else {
-        resp = await categoryService.createTenderCategory(tenderCategoryDraft)
-      }
+    const isEditing = !!editingTenderCategoryId;
 
+    try {
+      let resp;
+      if (isEditing) {
+        resp = await categoryService.updateTenderCategory(
+          editingTenderCategoryId,
+          tenderCategoryDraft,
+        );
+      } else {
+        resp = await categoryService.createTenderCategory(tenderCategoryDraft);
+      }
+      console.log("here", resp);
       if (resp.success) {
         if (isEditing) {
-          setTenderCategories(prev => prev.map(c => c.id === editingTenderCategoryId ? resp.data : c))
+          setTenderCategories((prev) =>
+            prev.map((c) => (c.id === editingTenderCategoryId ? resp.data : c)),
+          );
         } else {
-          setTenderCategories(prev => [resp.data, ...prev])
+          setTenderCategories((prev) => [resp.data, ...prev]);
         }
-        
-        setTenderCategoryMode('list')
-        setTenderCategoryDraft({ category_name: '', category_description: '' })
-        setEditingTenderCategoryId(null)
-        alerts.success('Success', isEditing ? 'Category updated successfully' : 'Tender Category added successfully')
+
+        setTenderCategoryMode("list");
+        setTenderCategoryDraft({ category_name: "", category_description: "" });
+        setEditingTenderCategoryId(null);
+        alerts.success(
+          "Success",
+          isEditing
+            ? "Category updated successfully"
+            : "Tender Category added successfully",
+        );
       } else {
-        alerts.error('Error', resp.message)
+        alerts.info("Info", resp.message);
       }
-    } catch {
-      alerts.error('Connection Error', `Failed to ${isEditing ? 'update' : 'save'} category`)
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to save category";
+      alerts.error("Error", errorMessage);
+      console.error("Debug Error:", error);
     }
-  }
+  };
 
   const handleEditTenderCategory = (cat) => {
     setTenderCategoryDraft({
       category_name: cat.category_name,
-      category_description: cat.category_description
-    })
-    setEditingTenderCategoryId(cat.id)
-    setTenderCategoryMode('form')
-  }
+      category_description: cat.category_description,
+    });
+    setEditingTenderCategoryId(cat.id);
+    setTenderCategoryMode("form");
+  };
 
   const handleDeleteTenderCategory = async (id) => {
-    const confirm = await alerts.confirm('Are you sure?', 'You want to delete this record?')
+    const confirm = await alerts.confirm(
+      "Are you sure?",
+      "You want to delete this record?",
+    );
     if (confirm.isConfirmed) {
       try {
-        const resp = await categoryService.deleteTenderCategory(id)
+        const resp = await categoryService.deleteTenderCategory(id);
         if (resp.success) {
-          setTenderCategories(prev => prev.filter(c => c.id !== id))
-          alerts.success('Deleted', 'Category deleted successfully')
+          setTenderCategories((prev) => prev.filter((c) => c.id !== id));
+          alerts.success("Deleted", "Category deleted successfully");
         }
       } catch {
-        alerts.error('Error', 'Failed to delete category')
+        alerts.error("Error", "Failed to delete category");
       }
     }
-  }
+  };
 
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'category_name',
-      header: 'Category Value',
-      Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>
-    },
-    {
-      accessorKey: 'category_description',
-      header: 'Description',
-      Cell: ({ cell }) => cell.getValue() || '-'
-    },
-    {
-      id: 'actions',
-      header: 'Action',
-      enableSorting: false,
-      enableColumnFilter: false,
-      Cell: ({ row }) => {
-        const cat = row.original
-        return (
-          <div className="row-actions">
-            <button
-              type="button"
-              className="view-row-btn"
-              onClick={() => setViewingCategory(cat)}
-            >
-              View
-            </button>
-            <button
-              type="button"
-              className="edit-row-btn"
-              onClick={() => handleEditTenderCategory(cat)}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className="delete-row-btn"
-              onClick={() => handleDeleteTenderCategory(cat.id)}
-            >
-              Delete
-            </button>
-          </div>
-        )
-      }
-    }
-  ], [])
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "category_name",
+        header: "Category Value",
+        Cell: ({ cell }) => (
+          <span className="bold-label">{cell.getValue() || "-"}</span>
+        ),
+      },
+      {
+        accessorKey: "category_description",
+        header: "Description",
+        Cell: ({ cell }) => cell.getValue() || "-",
+      },
+      {
+        id: "actions",
+        header: "Action",
+        enableSorting: false,
+        enableColumnFilter: false,
+        Cell: ({ row }) => {
+          const cat = row.original;
+          return (
+            <div className="row-actions">
+              <button
+                type="button"
+                className="view-row-btn"
+                onClick={() => setViewingCategory(cat)}
+              >
+                View
+              </button>
+              <button
+                type="button"
+                className="edit-row-btn"
+                onClick={() => handleEditTenderCategory(cat)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="delete-row-btn"
+                onClick={() => handleDeleteTenderCategory(cat.id)}
+              >
+                Delete
+              </button>
+            </div>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   return (
     <section className="details-section">
       <h3>Tender Category Management</h3>
       <p className="section-helper">
-        Identify tender category types (e.g. NIT, RFP, EOI). Short forms are saved as values, full forms as descriptions.
+        Identify tender category types (e.g. NIT, RFP, EOI). Short forms are
+        saved as values, full forms as descriptions.
       </p>
 
-      {tenderCategoryMode === 'list' ? (
+      {tenderCategoryMode === "list" ? (
         <>
           <div className="section-actions">
-            <button type="button" onClick={() => setTenderCategoryMode('form')}>
+            <button type="button" onClick={() => setTenderCategoryMode("form")}>
               + Add New Category
             </button>
           </div>
@@ -164,12 +192,25 @@ function TenderCategories() {
               <div className="modal-content">
                 <div className="modal-header">
                   <h4>{viewingCategory.category_name} Details</h4>
-                  <button type="button" className="modal-close-btn" onClick={() => setViewingCategory(null)}>✕</button>
+                  <button
+                    type="button"
+                    className="modal-close-btn"
+                    onClick={() => setViewingCategory(null)}
+                  >
+                    ✕
+                  </button>
                 </div>
                 <div className="modal-body">
                   <div className="card-look">
-                    <p><strong>Category Name (Value):</strong> {viewingCategory.category_name}</p>
-                    <p><strong>Description:</strong> {viewingCategory.category_description || 'No description available'}</p>
+                    <p>
+                      <strong>Category Name (Value):</strong>{" "}
+                      {viewingCategory.category_name}
+                    </p>
+                    <p>
+                      <strong>Description:</strong>{" "}
+                      {viewingCategory.category_description ||
+                        "No description available"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -186,7 +227,7 @@ function TenderCategories() {
                 name="category_name"
                 value={tenderCategoryDraft.category_name}
                 onChange={handleTenderCategoryDraftChange}
-                placeholder="e.g. NIT"
+                placeholder="e.g. RFP"
                 required
               />
             </label>
@@ -197,22 +238,29 @@ function TenderCategories() {
                 name="category_description"
                 value={tenderCategoryDraft.category_description}
                 onChange={handleTenderCategoryDraftChange}
-                placeholder="e.g. Notice Inviting Tender"
+                placeholder="e.g. Request For Proposal"
               />
             </label>
           </div>
 
           <div className="form-submit-actions">
-            <button type="button" onClick={handleSaveTenderCategory} className="save-btn">
-              Save
+            <button
+              type="button"
+              onClick={handleSaveTenderCategory}
+              className="save-btn"
+            >
+              {!!editingTenderCategoryId ? "Update" : "Save"}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => {
-                setTenderCategoryMode('list')
-                setEditingTenderCategoryId(null)
-                setTenderCategoryDraft({ category_name: '', category_description: '' })
-              }} 
+                setTenderCategoryMode("list");
+                setEditingTenderCategoryId(null);
+                setTenderCategoryDraft({
+                  category_name: "",
+                  category_description: "",
+                });
+              }}
               className="cancel-btn"
             >
               Back to List
@@ -221,7 +269,7 @@ function TenderCategories() {
         </div>
       )}
     </section>
-  )
+  );
 }
 
-export default TenderCategories
+export default TenderCategories;

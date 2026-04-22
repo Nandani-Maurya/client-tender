@@ -5,10 +5,13 @@ import AddDetails from '../AddDetails/AddDetails'
 import Header from '../Header/Header'
 import Sidebar from '../Sidebar/Sidebar'
 import Footer from '../Footer/Footer'
+import GlobalApiLoader from '../common/GlobalApiLoader'
+import useGlobalLoading from '../../hooks/useGlobalLoading'
 
 function Dashboard({ user }) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview')
+  const { isGlobalLoading } = useGlobalLoading()
 
   return (
     <section className="dashboard-page">
@@ -21,7 +24,7 @@ function Dashboard({ user }) {
       <div className="dashboard-main">
         <Header user={user} />
 
-        <main className="dashboard-center">
+        <main className={`dashboard-center ${isGlobalLoading ? 'dashboard-center-loading' : ''}`}>
           {activeSection === 'addDetails' ? (
             <AddDetails />
           ) : (
@@ -32,6 +35,10 @@ function Dashboard({ user }) {
               </p>
             </div>
           )}
+          <GlobalApiLoader
+            visible={isGlobalLoading}
+            scope="panel"
+          />
         </main>
 
         <Footer />

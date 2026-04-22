@@ -43,7 +43,8 @@ export const handleResponse = async (response) => {
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    return data;
+    // throw new Error(data.message || 'Something went wrong');
   }
 
   return data;

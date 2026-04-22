@@ -40,3 +40,9 @@
   justify-content: flex-end;
   margin-top: 20px;
 }
+
+@media (max-width: 768px) {
+  .premium-compact-form {
+    padding: 12px;
+  }
+}

@@ -119,3 +119,14 @@
   border-bottom: 1px solid #e3e9f6;
   padding: 6px;
 }
+
+@media (max-width: 768px) {
+  .iso-cert-entry-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .multi-form-entry {
+    padding: 14px;
+  }
+}
