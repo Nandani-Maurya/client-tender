@@ -24,19 +24,32 @@
 .dashboard-center {
   position: relative;
   display: block;
-  padding: 14px;
   background: #ffffff;
   border: 1px solid rgba(133, 146, 188, 0.24);
   border-radius: 8px;
   min-height: 0;
   min-width: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* Prevent loader from scrolling out */
 }
 
-.dashboard-center-loading {
+.dashboard-scrolling-content {
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-scrolling-content::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-center-loading .dashboard-scrolling-content {
   overflow: hidden;
 }
+
 
 .dashboard-center > * {
   max-width: 100%;
@@ -73,7 +86,7 @@
     gap: 8px;
   }
 
-  .dashboard-center {
+  .dashboard-scrolling-content {
     padding: 12px;
   }
 }
@@ -85,9 +98,8 @@
     grid-template-rows: auto minmax(0, 1fr);
   }
 
-  .dashboard-center {
+  .dashboard-scrolling-content {
     padding: 10px;
-    border-radius: 10px;
   }
 
   .dashboard-main {

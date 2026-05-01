@@ -25,21 +25,24 @@ function Dashboard({ user }) {
         <Header user={user} />
 
         <main className={`dashboard-center ${isGlobalLoading ? 'dashboard-center-loading' : ''}`}>
-          {activeSection === 'addDetails' ? (
-            <AddDetails />
-          ) : (
-            <div className="welcome-card">
-              <h2>Welcome</h2>
-              <p>
-                You are now logged in. This is static UI mode, ready for API integration later.
-              </p>
-            </div>
-          )}
+          <div className="dashboard-scrolling-content">
+            {activeSection === 'addDetails' ? (
+              <AddDetails />
+            ) : (
+              <div className="welcome-card">
+                <h2>Welcome</h2>
+                <p>
+                  You are now logged in. This is static UI mode, ready for API integration later.
+                </p>
+              </div>
+            )}
+          </div>
           <GlobalApiLoader
             visible={isGlobalLoading}
             scope="panel"
           />
         </main>
+
 
         <Footer />
       </div>

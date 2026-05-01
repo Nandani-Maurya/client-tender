@@ -94,6 +94,12 @@ function EmployeeBioData() {
 
   const columns = useMemo(() => [
     {
+      id: 'sno',
+      header: 'S.No.',
+      size: 50,
+      Cell: ({ row }) => row.index + 1
+    },
+    {
       accessorKey: 'profession',
       header: 'Profession',
       Cell: ({ cell }) => cell.getValue() || '-'

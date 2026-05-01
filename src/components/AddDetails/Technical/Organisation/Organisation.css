@@ -245,3 +245,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+.org-link {
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 600;
+  font-size: 14px;
+  word-break: break-all;
+  transition: color 0.2s ease;
+}
+
+.org-link:hover {
+  color: #1d4ed8;
+}

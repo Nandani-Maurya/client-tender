@@ -47,9 +47,9 @@ function Documents() {
       </div>
       <div className="additional-documents-section">
         <h4>Additional Documents</h4>
-        {additionalDocuments.map(doc => (
+        {additionalDocuments.map((doc, idx) => (
           <div key={doc.id} className="additional-document-item">
-            <span>{doc.type}</span>
+            <span>{idx + 1}. {doc.type}</span>
             <label className="upload-field inline-upload">
               <input type="file" onChange={(e) => handleFileChange(doc.id, e)} />
               <span>{doc.fileName || 'Upload File'}</span>

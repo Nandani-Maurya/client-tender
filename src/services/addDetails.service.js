@@ -2,12 +2,12 @@ import { request } from '../utils/apiClient';
 
 
 export const getActiveDetails = async () => {
-  return request('/add-details/active');
+  return request('/add-details/organization');
 };
 
 
 export const saveBasicDetails = async (payload) => {
-  return request('/add-details/basic-firm', {
+  return request('/add-details/organization', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

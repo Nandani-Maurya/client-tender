@@ -63,12 +63,17 @@ const alerts = {
       icon: 'warning',
       title,
       text,
+      showConfirmButton: true,
       showCancelButton: true,
       confirmButtonText: confirmText,
       cancelButtonText: 'Cancel',
       reverseButtons: true,
     })
   },
+  close: () => {
+    Swal.close()
+  },
 }
+
 
 export default alerts

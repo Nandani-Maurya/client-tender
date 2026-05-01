@@ -137,6 +137,12 @@ function ProjectExperience({ projectTypes }) {
 
   const columns = useMemo(() => [
     {
+      id: 'sno',
+      header: 'S.No.',
+      size: 50,
+      Cell: ({ row }) => row.index + 1
+    },
+    {
       accessorKey: 'clientName',
       header: 'Client Name',
       Cell: ({ cell }) => <span className="bold-label">{cell.getValue() || '-'}</span>

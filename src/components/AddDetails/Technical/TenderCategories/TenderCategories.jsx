@@ -123,6 +123,12 @@ function TenderCategories() {
   const columns = useMemo(
     () => [
       {
+        id: 'sno',
+        header: 'S.No.',
+        size: 50,
+        Cell: ({ row }) => row.index + 1
+      },
+      {
         accessorKey: "category_name",
         header: "Category Value",
         Cell: ({ cell }) => (

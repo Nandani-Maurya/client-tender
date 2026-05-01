@@ -6,31 +6,19 @@ import "./Organisation.css";
 const organisationFields = [
   { name: "nameOfFirm", label: "Name of Firm", required: true },
   { name: "registrationNumber", label: "Registration Number", required: true },
-  { name: "registrationDate", label: "Registration Date", required: true },
-  { name: "emailAddress", label: "Email Address", required: true },
-  { name: "webAddress", label: "Website", required: true },
-  {
-    name: "yearOfEstablishment",
-    label: "Year of Establishment",
-    required: true,
-  },
+  { name: "registrationDate", label: "Registration Date", required: true, type: "date" },
+  { name: "emailAddress", label: "Email Address", required: true, type: "email" },
+  { name: "webAddress", label: "Website", required: true, type: "url" },
+  { name: "yearOfEstablishment", label: "Year of Establishment", required: true, digits: 4 },
   { name: "typeOfFirm", label: "Type of Firm", required: true },
-  { name: "panCardNumber", label: "PAN Card Number", required: true },
-  {
-    name: "gstRegistrationNumber",
-    label: "GST Registration Number",
-    required: true,
-  },
-  {
-    name: "epfRegistrationNumber",
-    label: "EPF Registration Number",
-    required: true,
-  },
-  {
-    name: "esicRegistrationNumber",
-    label: "ESIC Registration Number",
-    required: true,
-  },
+  { name: "panCardNumber", label: "PAN Card Number", required: true, uppercase: 10 },
+  { name: "gstRegistrationNumber", label: "GST Registration Number", required: true, uppercase: 15 },
+  { name: "epfRegistrationNumber", label: "EPF Registration Number", required: true, uppercase: 22 },
+  { name: "esicRegistrationNumber", label: "ESIC Registration Number", required: true, digits: 17 },
+  { name: "headOfficeState", label: "Head Office State", required: true },
+  { name: "headOfficeCity", label: "Head Office City", required: true },
+  { name: "headOfficePincode", label: "Head Office Pincode", required: true, digits: 6 },
+  { name: "headOfficeFullAddress", label: "Full Address", required: true, fullWidth: true },
 ];
 
 const initialOrganisationDraft = organisationFields.reduce((draft, field) => {
@@ -38,36 +26,19 @@ const initialOrganisationDraft = organisationFields.reduce((draft, field) => {
   return draft;
 }, {});
 
-initialOrganisationDraft.headOfficePincode = "";
+const initialBranchDraft = { branchName: "", state: "", city: "", address: "", pincode: "" };
+const initialContactDraft = { type: "Telephone", number: "" };
+const initialPartnerDraft = { name: "", position: "", address: "", pincode: "", phoneNumber: "", isAuthorized: false };
 
-const initialBranchDraft = {
-  branchName: "",
-  state: "",
-  city: "",
-  address: "",
-  pincode: "",
+const PATTERNS = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^[0-9]{10}$/,
+  pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+  gst: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{3}$/,
+  epf: /^[A-Z]{2}[A-Z0-9]{10,22}$/,
+  esic: /^[0-9]{17}$/,
+  pincode: /^[0-9]{6}$/
 };
-
-const initialContactDraft = {
-  type: "Telephone",
-  number: "",
-};
-
-const initialPartnerDraft = {
-  name: "",
-  position: "",
-  address: "",
-  pincode: "",
-  phoneNumber: "",
-  isAuthorized: false,
-};
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^[0-9]{10}$/;
-const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-const gstPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{3}$/;
-const epfPattern = /^[A-Z]{2}[A-Z0-9]{10,22}$/;
-const esicPattern = /^[0-9]{17}$/;
 
 const normalizeWebsite = (value) => {
   const trimmed = String(value || "").trim();
@@ -75,6 +46,7 @@ const normalizeWebsite = (value) => {
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
 };
+
 
 const allowOnlyDigits = (event) => {
   const allowedKeys = [
@@ -102,7 +74,7 @@ const preventNonDigitPaste = (event) => {
   }
 };
 
-const digitsOnlyValue = (value) => String(value || "").replace(/[^0-9]/g, "");
+
 
 function Organisation() {
   const [organisationDraft, setOrganisationDraft] = useState(
@@ -200,117 +172,29 @@ function Organisation() {
 
   const handleOrganisationChange = (event) => {
     let { name, value } = event.target;
-    if (name === "yearOfEstablishment") {
-      setOrganisationDraft((prev) => ({
-        ...prev,
-        [name]: digitsOnlyValue(value).slice(0, 4),
-      }));
-      return;
-    }
-    if (name === "panCardNumber") value = value.toUpperCase().slice(0, 10);
-    if (name === "gstRegistrationNumber")
-      value = value.toUpperCase().slice(0, 15);
-    if (name === "epfRegistrationNumber")
-      value = value.toUpperCase().slice(0, 22);
-    if (name === "esicRegistrationNumber")
-      value = digitsOnlyValue(value).slice(0, 17);
+    const config = organisationFields.find(f => f.name === name);
+    
+    if (config?.digits) value = value.replace(/[^0-9]/g, "").slice(0, config.digits);
+    if (config?.uppercase) value = value.toUpperCase().slice(0, config.uppercase);
 
     setOrganisationDraft((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleContactNumberChange = (index, event) => {
-    const digitsOnly = digitsOnlyValue(event.target.value).slice(0, 10);
-    setContacts((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], number: digitsOnly };
-      return updated;
-    });
-  };
 
-  const handleBranchChange = (index, event) => {
-    const { name, value } = event.target;
-    setBranches((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        [name]: name === "pincode" ? digitsOnlyValue(value).slice(0, 6) : value,
-      };
-      return updated;
-    });
-  };
-
-  const handleAddMoreBranch = () => {
-    setBranches((prev) => [
-      ...prev,
-      { ...initialBranchDraft, id: `branch-${Date.now()}` },
-    ]);
-  };
-
-  const handleRemoveBranch = (id) => {
-    setBranches((prev) => prev.filter((b) => b.id !== id));
-  };
-
-  const handleContactChange = (index, event) => {
-    const { name, value } = event.target;
-    setContacts((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [name]: value };
-      return updated;
-    });
-  };
-
-  const handleAddMoreContact = () => {
-    setContacts((prev) => [
-      ...prev,
-      { ...initialContactDraft, id: `contact-${Date.now()}` },
-    ]);
-  };
-
-  const handleRemoveContact = (id) => {
-    setContacts((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const handlePartnerChange = (index, event) => {
+  const handleListChange = (setter, index, event, options = {}) => {
     const { name, value, checked, type } = event.target;
-    setPartners((prev) => {
+    setter((prev) => {
       const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        [name]:
-          type === "checkbox"
-            ? checked
-            : name === "pincode"
-              ? digitsOnlyValue(value).slice(0, 6)
-              : value,
-      };
+      let finalValue = type === "checkbox" ? checked : value;
+      
+      if (options.digits) finalValue = finalValue.replace(/[^0-9]/g, "").slice(0, options.digits);
+      if (options.uppercase) finalValue = finalValue.toUpperCase().slice(0, options.uppercase);
+      
+      updated[index] = { ...updated[index], [name]: finalValue };
       return updated;
     });
   };
 
-  const handlePartnerPhoneChange = (index, event) => {
-    const digitsOnly = digitsOnlyValue(event.target.value).slice(0, 10);
-    setPartners((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], phoneNumber: digitsOnly };
-      return updated;
-    });
-  };
-
-  const handlePincodeChange = (setter, key) => (event) => {
-    const digitsOnly = digitsOnlyValue(event.target.value).slice(0, 6);
-    setter((prev) => ({ ...prev, [key]: digitsOnly }));
-  };
-
-  const handleAddMorePartner = () => {
-    setPartners((prev) => [
-      ...prev,
-      { ...initialPartnerDraft, id: `partner-${Date.now()}` },
-    ]);
-  };
-
-  const handleRemovePartner = (id) => {
-    setPartners((prev) => prev.filter((p) => p.id !== id));
-  };
 
   const handleCancelOrganisationEdit = async () => {
     const confirm = await alerts.confirm(
@@ -328,256 +212,122 @@ function Organisation() {
   const validateOrganisationDraft = () => {
     const errors = {};
     let firstErrorField = null;
-    // Static fields
-    const requiredFields = [
-      ["nameOfFirm", "Name of Firm"],
-      ["registrationNumber", "Registration Number"],
-      ["registrationDate", "Registration Date"],
-      ["emailAddress", "Email Address"],
-      ["webAddress", "Website"],
-      ["yearOfEstablishment", "Year of Establishment"],
-      ["typeOfFirm", "Type of Firm"],
-      ["panCardNumber", "PAN Card Number"],
-      ["gstRegistrationNumber", "GST Registration Number"],
-      ["epfRegistrationNumber", "EPF Registration Number"],
-      ["esicRegistrationNumber", "ESIC Registration Number"],
-      ["headOfficeState", "Head Office State"],
-      ["headOfficeCity", "Head Office City"],
-      ["headOfficeFullAddress", "Head Office Full Address"],
-      ["headOfficePincode", "Registered Office Pincode"],
-    ];
-    for (const [key, label] of requiredFields) {
-      if (!String(organisationDraft[key] || "").trim()) {
-        errors[`org-${key}`] = `${label} is required`;
-        if (!firstErrorField) firstErrorField = `org-${key}`;
+
+    organisationFields.forEach(field => {
+      const value = String(organisationDraft[field.name] || "").trim();
+      if (field.required && !value) {
+        errors[`org-${field.name}`] = `${field.label} is required`;
+        if (!firstErrorField) firstErrorField = `org-${field.name}`;
+      } else if (value) {
+        if (field.type === "email" && !PATTERNS.email.test(value)) {
+          errors[`org-${field.name}`] = "Please enter a valid email address";
+        } else if (field.name === "registrationDate") {
+          const selectedDate = new Date(`${value}T00:00:00`);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          if (selectedDate > today) errors[`org-${field.name}`] = "Registration Date cannot be greater than today";
+        } else if (field.name === "yearOfEstablishment") {
+          const year = Number(value);
+          const currentYear = new Date().getFullYear();
+          if (!Number.isInteger(year) || year < 1800 || year > currentYear) errors[`org-${field.name}`] = "Please enter a valid year of establishment";
+        } else if (field.name === "panCardNumber" && !PATTERNS.pan.test(value.toUpperCase())) {
+          errors[`org-${field.name}`] = "Please enter a valid PAN card number";
+        } else if (field.name === "gstRegistrationNumber" && !PATTERNS.gst.test(value.toUpperCase())) {
+          errors[`org-${field.name}`] = "Please enter a valid GST registration number";
+        } else if (field.name === "epfRegistrationNumber" && !PATTERNS.epf.test(value.toUpperCase())) {
+          errors[`org-${field.name}`] = "Please enter a valid EPF registration number";
+        } else if (field.name === "esicRegistrationNumber" && !PATTERNS.esic.test(value)) {
+          errors[`org-${field.name}`] = "Please enter a valid ESIC registration number";
+        } else if (field.digits && value.length !== field.digits) {
+          errors[`org-${field.name}`] = `${field.label} must be exactly ${field.digits} digits`;
+        }
+
+        if (errors[`org-${field.name}`] && !firstErrorField) firstErrorField = `org-${field.name}`;
       }
-    }
-    // Email
-    if (
-      organisationDraft.emailAddress &&
-      !emailPattern.test(String(organisationDraft.emailAddress).trim())
-    ) {
-      errors["org-emailAddress"] = "Please enter a valid email address";
-      if (!firstErrorField) firstErrorField = "org-emailAddress";
-    }
-    // Website
-    if (
-      organisationDraft.webAddress &&
-      !String(organisationDraft.webAddress).trim()
-    ) {
-      errors["org-webAddress"] = "Website is required";
-      if (!firstErrorField) firstErrorField = "org-webAddress";
-    }
-    // Registration date
-    if (organisationDraft.registrationDate) {
-      const selectedDate = new Date(
-        `${organisationDraft.registrationDate}T00:00:00`,
-      );
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate > today) {
-        errors["org-registrationDate"] =
-          "Registration Date cannot be greater than today";
-        if (!firstErrorField) firstErrorField = "org-registrationDate";
-      }
-    }
-    // Pincode
-    if (
-      organisationDraft.headOfficePincode &&
-      !/^[0-9]{6}$/.test(String(organisationDraft.headOfficePincode).trim())
-    ) {
-      errors["org-headOfficePincode"] =
-        "Registered office pincode must be exactly 6 digits";
-      if (!firstErrorField) firstErrorField = "org-headOfficePincode";
-    }
-    // Year
-    if (organisationDraft.yearOfEstablishment) {
-      const year = Number(organisationDraft.yearOfEstablishment);
-      const currentYear = new Date().getFullYear();
-      if (!Number.isInteger(year) || year < 1800 || year > currentYear) {
-        errors["org-yearOfEstablishment"] =
-          "Please enter a valid year of establishment";
-        if (!firstErrorField) firstErrorField = "org-yearOfEstablishment";
-      }
-    }
-    // PAN
-    if (
-      organisationDraft.panCardNumber &&
-      !panPattern.test(
-        String(organisationDraft.panCardNumber).trim().toUpperCase(),
-      )
-    ) {
-      errors["org-panCardNumber"] = "Please enter a valid PAN card number";
-      if (!firstErrorField) firstErrorField = "org-panCardNumber";
-    }
-    // GST
-    if (
-      organisationDraft.gstRegistrationNumber &&
-      !gstPattern.test(
-        String(organisationDraft.gstRegistrationNumber).trim().toUpperCase(),
-      )
-    ) {
-      errors["org-gstRegistrationNumber"] =
-        "Please enter a valid GST registration number";
-      if (!firstErrorField) firstErrorField = "org-gstRegistrationNumber";
-    }
-    // EPF
-    if (
-      organisationDraft.epfRegistrationNumber &&
-      !epfPattern.test(
-        String(organisationDraft.epfRegistrationNumber).trim().toUpperCase(),
-      )
-    ) {
-      errors["org-epfRegistrationNumber"] =
-        "Please enter a valid EPF registration number";
-      if (!firstErrorField) firstErrorField = "org-epfRegistrationNumber";
-    }
-    // ESIC
-    if (
-      organisationDraft.esicRegistrationNumber &&
-      !esicPattern.test(String(organisationDraft.esicRegistrationNumber).trim())
-    ) {
-      errors["org-esicRegistrationNumber"] =
-        "Please enter a valid ESIC registration number";
-      if (!firstErrorField) firstErrorField = "org-esicRegistrationNumber";
-    }
-    // Contacts
+    });
+
     contacts.forEach((contact, idx) => {
       if (!String(contact.number || "").trim()) {
         errors[`contact-number-${idx}`] = "Contact number is required";
-        if (!firstErrorField) firstErrorField = `contact-number-${idx}`;
-      } else if (!phonePattern.test(String(contact.number).trim())) {
-        errors[`contact-number-${idx}`] =
-          "Contact phone number must be exactly 10 digits";
-        if (!firstErrorField) firstErrorField = `contact-number-${idx}`;
+      } else if (!PATTERNS.phone.test(String(contact.number).trim())) {
+        errors[`contact-number-${idx}`] = "Contact phone number must be exactly 10 digits";
       }
+      if (errors[`contact-number-${idx}`] && !firstErrorField) firstErrorField = `contact-number-${idx}`;
     });
-    // Branches
+
     branches.forEach((branch, idx) => {
-      if (!String(branch.branchName || "").trim()) {
-        errors[`branch-branchName-${idx}`] = "Branch name is required";
-        if (!firstErrorField) firstErrorField = `branch-branchName-${idx}`;
-      }
-      if (!String(branch.state || "").trim()) {
-        errors[`branch-state-${idx}`] = "Branch state is required";
-        if (!firstErrorField) firstErrorField = `branch-state-${idx}`;
-      }
-      if (!String(branch.city || "").trim()) {
-        errors[`branch-city-${idx}`] = "Branch city is required";
-        if (!firstErrorField) firstErrorField = `branch-city-${idx}`;
-      }
-      if (!String(branch.address || "").trim()) {
-        errors[`branch-address-${idx}`] = "Branch address is required";
-        if (!firstErrorField) firstErrorField = `branch-address-${idx}`;
-      }
-      if (!/^[0-9]{6}$/.test(String(branch.pincode || "").trim())) {
-        errors[`branch-pincode-${idx}`] =
-          "Branch pincode must be exactly 6 digits";
-        if (!firstErrorField) firstErrorField = `branch-pincode-${idx}`;
-      }
+      ["branchName", "state", "city", "address", "pincode"].forEach(key => {
+        if (!String(branch[key] || "").trim()) {
+          errors[`branch-${key}-${idx}`] = `Branch ${key.replace(/([A-Z])/g, " $1").toLowerCase()} is required`;
+        } else if (key === "pincode" && !PATTERNS.pincode.test(branch[key])) {
+          errors[`branch-${key}-${idx}`] = "Branch pincode must be exactly 6 digits";
+        }
+        if (errors[`branch-${key}-${idx}`] && !firstErrorField) firstErrorField = `branch-${key}-${idx}`;
+      });
     });
-    // Partners
+
     partners.forEach((partner, idx) => {
-      if (!String(partner.name || "").trim()) {
-        errors[`partner-name-${idx}`] = "Partner name is required";
-        if (!firstErrorField) firstErrorField = `partner-name-${idx}`;
-      }
-      if (!String(partner.position || "").trim()) {
-        errors[`partner-position-${idx}`] = "Partner designation is required";
-        if (!firstErrorField) firstErrorField = `partner-position-${idx}`;
-      }
-      if (!String(partner.phoneNumber || "").trim()) {
-        errors[`partner-phoneNumber-${idx}`] =
-          "Partner mobile number is required";
-        if (!firstErrorField) firstErrorField = `partner-phoneNumber-${idx}`;
-      } else if (!phonePattern.test(String(partner.phoneNumber).trim())) {
-        errors[`partner-phoneNumber-${idx}`] =
-          "Partner mobile number must be exactly 10 digits";
-        if (!firstErrorField) firstErrorField = `partner-phoneNumber-${idx}`;
-      }
-      if (!String(partner.address || "").trim()) {
-        errors[`partner-address-${idx}`] =
-          "Partner residential address is required";
-        if (!firstErrorField) firstErrorField = `partner-address-${idx}`;
-      }
-      if (!String(partner.pincode || "").trim()) {
-        errors[`partner-pincode-${idx}`] = "Partner pincode is required";
-        if (!firstErrorField) firstErrorField = `partner-pincode-${idx}`;
-      } else if (!/^[0-9]{6}$/.test(String(partner.pincode || "").trim())) {
-        errors[`partner-pincode-${idx}`] =
-          "Partner pincode must be exactly 6 digits";
-        if (!firstErrorField) firstErrorField = `partner-pincode-${idx}`;
-      }
+      ["name", "position", "phoneNumber", "address", "pincode"].forEach(key => {
+        if (!String(partner[key] || "").trim()) {
+          errors[`partner-${key}-${idx}`] = `Partner ${key.replace(/([A-Z])/g, " $1").toLowerCase()} is required`;
+        } else if (key === "phoneNumber" && !PATTERNS.phone.test(partner[key])) {
+          errors[`partner-${key}-${idx}`] = "Partner mobile number must be exactly 10 digits";
+        } else if (key === "pincode" && !PATTERNS.pincode.test(partner[key])) {
+          errors[`partner-${key}-${idx}`] = "Partner pincode must be exactly 6 digits";
+        }
+        if (errors[`partner-${key}-${idx}`] && !firstErrorField) firstErrorField = `partner-${key}-${idx}`;
+      });
     });
-    // At least one contact
-    if (
-      contacts.filter((contact) => String(contact.number || "").trim())
-        .length === 0
-    ) {
+
+    if (contacts.filter(c => String(c.number || "").trim()).length === 0) {
       errors["contact-atleastone"] = "At least one contact number is required";
       if (!firstErrorField) firstErrorField = "contact-atleastone";
     }
-    // At least one branch
-    const hasAnyBranch = branches.some((branch) =>
-      ["branchName", "state", "city", "address", "pincode"].some((field) =>
-        String(branch[field] || "").trim(),
-      ),
-    );
-    if (!hasAnyBranch) {
+
+    if (!branches.some(b => Object.values(b).some(v => String(v || "").trim()))) {
       errors["branch-atleastone"] = "At least one branch office is required";
       if (!firstErrorField) firstErrorField = "branch-atleastone";
     }
+
     return { errors, firstErrorField };
   };
 
+
   const handleSaveBasicDetails = async () => {
-    setIsSaving(true);
-    const loader = alerts.loading(
-      "Synchronizing",
-      "Saving organization details to cloud...",
-    );
     try {
       const hasData = organisationFields.some(({ name }) =>
-        String(organisationDraft[name]).trim(),
+        String(organisationDraft[name] || "").trim()
       );
+
       if (!hasData) {
-        loader.close();
-        alerts.info(
-          "No Data",
-          "Please fill the organization details before saving.",
-        );
-        setIsSaving(false);
+        alerts.info("No Data", "Please fill the organization details before saving.");
         return;
       }
 
-      // Validate first, then confirm
       const { errors } = validateOrganisationDraft();
       if (Object.keys(errors).length > 0) {
-        loader.close();
-        const firstErrorMessage = Object.values(errors)[0];
-        alerts.info("Info", firstErrorMessage);
-        setIsSaving(false);
+        alerts.info("Info", Object.values(errors)[0]);
         return;
       }
 
       const confirm = await alerts.confirm(
-        "Save Organization?",
-        "Are you sure you want to save BASIC organization details?",
+        isUpdateMode ? "Update Organization?" : "Save Organization?",
+        `Are you sure you want to ${isUpdateMode ? "update" : "save"} basic organization details?`,
+        isUpdateMode ? "Yes, Update" : "Yes, Save"
       );
-      if (!confirm.isConfirmed) {
-        loader.close();
-        setIsSaving(false);
-        return;
-      }
+
+      if (!confirm.isConfirmed) return;
+
+      setIsSaving(true);
 
       const payload = {
+
         name_of_firm: organisationDraft.nameOfFirm,
         registration_number: organisationDraft.registrationNumber,
         registration_date: organisationDraft.registrationDate || null,
         email_address: organisationDraft.emailAddress,
         web_address: normalizeWebsite(organisationDraft.webAddress),
-        year_of_establishment:
-          parseInt(organisationDraft.yearOfEstablishment, 10) || null,
+        year_of_establishment: parseInt(organisationDraft.yearOfEstablishment, 10) || null,
         type_of_firm: organisationDraft.typeOfFirm,
         pan_card_number: organisationDraft.panCardNumber,
         gst_registration_number: organisationDraft.gstRegistrationNumber,
@@ -588,12 +338,10 @@ function Organisation() {
         head_office_full_address: organisationDraft.headOfficeFullAddress,
         head_office_pincode: organisationDraft.headOfficePincode,
         contacts: contacts
-          .filter((c) => c.number.trim())
+          .filter((c) => String(c.number || "").trim())
           .map((c) => ({ type: c.type, number: c.number })),
         branches: branches
-          .filter(
-            (b) => b.branchName.trim() || b.city.trim() || b.pincode.trim(),
-          )
+          .filter((b) => String(b.branchName || "").trim() || String(b.city || "").trim() || String(b.pincode || "").trim())
           .map((b) => ({
             branch_name: b.branchName,
             state: b.state,
@@ -602,7 +350,7 @@ function Organisation() {
             pincode: b.pincode,
           })),
         partners: partners
-          .filter((p) => p.name.trim())
+          .filter((p) => String(p.name || "").trim())
           .map((p) => ({
             name: p.name,
             position: p.position,
@@ -614,28 +362,30 @@ function Organisation() {
       };
 
       const res = await addDetailsService.saveBasicDetails(payload);
-      loader.close();
+
       if (res.success) {
         setIsUpdateMode(true);
         setHasActiveOrganization(true);
         setIsEditEnabled(false);
         alerts.success(
           "Success",
-          isUpdateMode
-            ? "Organization updated successfully"
-            : "Organization saved successfully",
+          isUpdateMode ? "Organization updated successfully" : "Organization saved successfully"
         );
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
+
         alerts.info("Info", res.message);
       }
     } catch (err) {
-      loader.close();
       console.error(err);
-      alerts.info("Info", "An unexpected error occurred during save.");
+      alerts.error("Error", "Internal server error");
     } finally {
       setIsSaving(false);
     }
   };
+
+
+
 
   return (
     <section
@@ -676,92 +426,50 @@ function Organisation() {
       )}
 
       <div className="details-grid mt-2">
-        {organisationFields.map(({ name, label, required }) => (
-          <label
-            className="details-field"
-            key={name}
-            style={{ alignItems: "flex-start" }}
-          >
-            <span className="field-label-line">
-              <span className="field-label-text">{label}</span>
-              {required ? <span className="required-star">*</span> : null}
-            </span>
-            <div
-              style={{
-                width: "100%",
-                minHeight: "42px",
-                display: "flex",
-                alignItems: "center",
-              }}
+        {organisationFields
+          .filter((f) => !f.name.startsWith("headOffice"))
+          .map((field) => (
+            <label
+              className={`details-field ${field.fullWidth ? "full-field" : ""}`}
+              key={field.name}
+              style={{ alignItems: "flex-start" }}
             >
-              {!isEditEnabled &&
-              name === "webAddress" &&
-              organisationDraft[name] ? (
-                <a
-                  href={normalizeWebsite(organisationDraft[name])}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    color: "#2563eb",
-                    textDecoration: "underline",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {organisationDraft[name]}
-                </a>
-              ) : (
-                <input
-                  type={name === "registrationDate" ? "date" : "text"}
-                  name={name}
-                  value={organisationDraft[name]}
-                  onChange={handleOrganisationChange}
-                  onKeyDown={
-                    name === "yearOfEstablishment" ||
-                    name === "esicRegistrationNumber"
-                      ? allowOnlyDigits
-                      : undefined
-                  }
-                  onPaste={
-                    name === "yearOfEstablishment" ||
-                    name === "esicRegistrationNumber"
-                      ? preventNonDigitPaste
-                      : undefined
-                  }
-                  inputMode={
-                    name === "yearOfEstablishment" ||
-                    name === "esicRegistrationNumber"
-                      ? "numeric"
-                      : undefined
-                  }
-                  autoComplete="off"
-                  placeholder={`Enter ${label}`}
-                  disabled={!isEditEnabled}
-                  max={
-                    name === "registrationDate"
-                      ? new Date().toISOString().split("T")[0]
-                      : undefined
-                  }
-                  maxLength={
-                    name === "panCardNumber"
-                      ? 10
-                      : name === "gstRegistrationNumber"
-                        ? 15
-                        : name === "esicRegistrationNumber"
-                          ? 17
-                          : name === "epfRegistrationNumber"
-                            ? 22
-                            : name === "yearOfEstablishment"
-                              ? 4
-                              : undefined
-                  }
-                />
-              )}
-            </div>
-          </label>
-        ))}
+              <span className="field-label-line">
+                <span className="field-label-text">{field.label}</span>
+                {field.required ? <span className="required-star">*</span> : null}
+              </span>
+              <div style={{ width: "100%", minHeight: "42px", display: "flex", alignItems: "center" }}>
+                {!isEditEnabled && field.type === "url" && organisationDraft[field.name] ? (
+                  <a
+                    href={normalizeWebsite(organisationDraft[field.name])}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="org-link"
+                  >
+                    {organisationDraft[field.name]}
+                  </a>
+                ) : (
+                  <input
+                    type={field.type === "date" ? "date" : "text"}
+                    name={field.name}
+                    value={organisationDraft[field.name]}
+                    onChange={handleOrganisationChange}
+                    onKeyDown={field.digits ? allowOnlyDigits : undefined}
+                    onPaste={field.digits ? preventNonDigitPaste : undefined}
+                    inputMode={field.digits ? "numeric" : undefined}
+                    autoComplete="off"
+                    placeholder={`Enter ${field.label}`}
+                    disabled={!isEditEnabled}
+                    max={field.type === "date" ? new Date().toISOString().split("T")[0] : undefined}
+                    maxLength={field.digits || field.uppercase || undefined}
+                  />
+                )}
+              </div>
+            </label>
+          ))}
       </div>
+
+
 
       <div className="office-block mt-3">
         <h4>Official Contact Numbers</h4>
@@ -777,16 +485,16 @@ function Organisation() {
                     *
                   </span>
                 </span>
-                {contacts.length > 1 && (
-                  <button
-                    type="button"
-                    className="delete-entry-btn"
-                    onClick={() => handleRemoveContact(contact.id)}
-                    disabled={!isEditEnabled}
-                  >
-                    ✕ Remove
-                  </button>
-                )}
+                {contacts.length > 1 && <button
+                      type="button"
+                      className="delete-entry-btn"
+                      onClick={() => setContacts(prev => prev.filter(c => c.id !== contact.id))}
+                      disabled={!isEditEnabled}
+                    >
+                      ✕ Remove
+                    </button>
+
+                }
               </div>
               <div className="contact-entry-form">
                 <label className="details-field">
@@ -794,7 +502,7 @@ function Organisation() {
                   <select
                     name="type"
                     value={contact.type}
-                    onChange={(e) => handleContactChange(idx, e)}
+                    onChange={(e) => handleListChange(setContacts, idx, e)}
                     disabled={!isEditEnabled}
                   >
                     <option value="Telephone">Telephone</option>
@@ -811,7 +519,7 @@ function Organisation() {
                     autoComplete="off"
                     name="number"
                     value={contact.number}
-                    onChange={(e) => handleContactNumberChange(idx, e)}
+                    onChange={(e) => handleListChange(setContacts, idx, e, { digits: 10 })}
                     onKeyDown={allowOnlyDigits}
                     onPaste={preventNonDigitPaste}
                     placeholder="Enter 10-digit number"
@@ -825,11 +533,12 @@ function Organisation() {
           <button
             type="button"
             className="add-more-section-btn"
-            onClick={handleAddMoreContact}
+            onClick={() => setContacts(prev => [...prev, { ...initialContactDraft, id: `contact-${Date.now()}` }])}
             disabled={!isEditEnabled}
           >
             + Add Another Contact
           </button>
+
         </div>
       </div>
 
@@ -839,78 +548,38 @@ function Organisation() {
           <span className="required-star">*</span>
         </h4>
         <div className="details-grid card-look p-2">
-          <label className="details-field" style={{ alignItems: "flex-start" }}>
-            <span>State</span>
-            <div style={{ width: "100%" }}>
-              <input
-                type="text"
-                name="headOfficeState"
-                value={organisationDraft.headOfficeState || ""}
-                onChange={handleOrganisationChange}
-                placeholder="e.g. Maharashtra"
-                disabled={!isEditEnabled}
-              />
-            </div>
-          </label>
-          <label className="details-field" style={{ alignItems: "flex-start" }}>
-            <span>City</span>
-            <div style={{ width: "100%" }}>
-              <input
-                type="text"
-                name="headOfficeCity"
-                value={organisationDraft.headOfficeCity || ""}
-                onChange={handleOrganisationChange}
-                placeholder="e.g. Mumbai"
-                disabled={!isEditEnabled}
-              />
-            </div>
-          </label>
-          <label
-            className="details-field full-field"
-            style={{ alignItems: "flex-start" }}
-          >
-            <span>Complete Postal Address</span>
-            <div style={{ width: "100%" }}>
-              <input
-                type="text"
-                name="headOfficeFullAddress"
-                value={organisationDraft.headOfficeFullAddress || ""}
-                onChange={handleOrganisationChange}
-                placeholder="House no, Street, Landmark..."
-                disabled={!isEditEnabled}
-              />
-            </div>
-          </label>
-          <label className="details-field" style={{ alignItems: "flex-start" }}>
-            <span>Pincode </span>
-            <div style={{ width: "100%" }}>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                name="headOfficePincode"
-                value={organisationDraft.headOfficePincode || ""}
-                onChange={(e) => {
-                  setOrganisationDraft((prev) => ({
-                    ...prev,
-                    headOfficePincode: digitsOnlyValue(e.target.value).slice(
-                      0,
-                      6,
-                    ),
-                  }));
-                }}
-                onKeyDown={allowOnlyDigits}
-                onPaste={preventNonDigitPaste}
-                placeholder="6-digit pincode"
-                disabled={!isEditEnabled}
-                maxLength="6"
-              />
-            </div>
-          </label>
+          {organisationFields
+            .filter((f) => f.name.startsWith("headOffice"))
+            .map((field) => (
+              <label
+                className={`details-field ${field.fullWidth ? "full-field" : ""}`}
+                key={field.name}
+                style={{ alignItems: "flex-start" }}
+              >
+                <span className="field-label-line">
+                  <span className="field-label-text">{field.label.replace("Head Office ", "")}</span>
+                  {field.required ? <span className="required-star">*</span> : null}
+                </span>
+                <div style={{ width: "100%" }}>
+                  <input
+                    type="text"
+                    name={field.name}
+                    value={organisationDraft[field.name] || ""}
+                    onChange={handleOrganisationChange}
+                    onKeyDown={field.digits ? allowOnlyDigits : undefined}
+                    onPaste={field.digits ? preventNonDigitPaste : undefined}
+                    placeholder={`Enter ${field.label.replace("Head Office ", "")}`}
+                    disabled={!isEditEnabled}
+                    maxLength={field.digits || undefined}
+                  />
+                </div>
+              </label>
+            ))}
         </div>
       </div>
 
       <div className="office-block mt-3">
+
         <h4>Regional / Branch Offices</h4>
         <div className="multi-list">
           {branches.map((branch, idx) => (
@@ -924,16 +593,16 @@ function Organisation() {
                     *
                   </span>
                 </span>
-                {branches.length > 1 && (
-                  <button
-                    type="button"
-                    className="delete-entry-btn"
-                    onClick={() => handleRemoveBranch(branch.id)}
-                    disabled={!isEditEnabled}
-                  >
-                    ✕ Remove
-                  </button>
-                )}
+                {branches.length > 1 && <button
+                      type="button"
+                      className="delete-entry-btn"
+                      onClick={() => setBranches(prev => prev.filter(b => b.id !== branch.id))}
+                      disabled={!isEditEnabled}
+                    >
+                      ✕ Remove
+                    </button>
+
+                }
               </div>
               <div className="branch-entry-form">
                 <label className="details-field">
@@ -942,7 +611,7 @@ function Organisation() {
                     type="text"
                     name="branchName"
                     value={branch.branchName}
-                    onChange={(e) => handleBranchChange(idx, e)}
+                    onChange={(e) => handleListChange(setBranches, idx, e)}
                     placeholder="e.g. Pune Regional"
                     disabled={!isEditEnabled}
                   />
@@ -953,7 +622,7 @@ function Organisation() {
                     type="text"
                     name="state"
                     value={branch.state}
-                    onChange={(e) => handleBranchChange(idx, e)}
+                    onChange={(e) => handleListChange(setBranches, idx, e)}
                     placeholder="State"
                     disabled={!isEditEnabled}
                   />
@@ -964,7 +633,7 @@ function Organisation() {
                     type="text"
                     name="city"
                     value={branch.city}
-                    onChange={(e) => handleBranchChange(idx, e)}
+                    onChange={(e) => handleListChange(setBranches, idx, e)}
                     placeholder="City"
                     disabled={!isEditEnabled}
                   />
@@ -975,7 +644,7 @@ function Organisation() {
                     type="text"
                     name="address"
                     value={branch.address}
-                    onChange={(e) => handleBranchChange(idx, e)}
+                    onChange={(e) => handleListChange(setBranches, idx, e)}
                     placeholder="Complete branch address"
                     disabled={!isEditEnabled}
                   />
@@ -988,7 +657,7 @@ function Organisation() {
                     autoComplete="off"
                     name="pincode"
                     value={branch.pincode || ""}
-                    onChange={(e) => handleBranchChange(idx, e)}
+                    onChange={(e) => handleListChange(setBranches, idx, e, { digits: 6 })}
                     onKeyDown={allowOnlyDigits}
                     onPaste={preventNonDigitPaste}
                     placeholder="6-digit pincode"
@@ -1002,11 +671,12 @@ function Organisation() {
           <button
             type="button"
             className="add-more-section-btn"
-            onClick={handleAddMoreBranch}
+            onClick={() => setBranches(prev => [...prev, { ...initialBranchDraft, id: `branch-${Date.now()}` }])}
             disabled={!isEditEnabled}
           >
             + Add Another Branch Office
           </button>
+
         </div>
       </div>
 
@@ -1024,16 +694,16 @@ function Organisation() {
                     *
                   </span>
                 </span>
-                {partners.length > 1 && (
-                  <button
-                    type="button"
-                    className="delete-entry-btn"
-                    onClick={() => handleRemovePartner(partner.id)}
-                    disabled={!isEditEnabled}
-                  >
-                    ✕ Remove
-                  </button>
-                )}
+                {partners.length > 1 && <button
+                      type="button"
+                      className="delete-entry-btn"
+                      onClick={() => setPartners(prev => prev.filter(p => p.id !== partner.id))}
+                      disabled={!isEditEnabled}
+                    >
+                      ✕ Remove
+                    </button>
+
+                }
               </div>
               <div className="partner-entry-form">
                 <label className="details-field">
@@ -1042,7 +712,7 @@ function Organisation() {
                     type="text"
                     name="name"
                     value={partner.name}
-                    onChange={(e) => handlePartnerChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e)}
                     placeholder="Member name"
                     disabled={!isEditEnabled}
                   />
@@ -1053,7 +723,7 @@ function Organisation() {
                     type="text"
                     name="position"
                     value={partner.position}
-                    onChange={(e) => handlePartnerChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e)}
                     placeholder="e.g. MD / CEO"
                     disabled={!isEditEnabled}
                   />
@@ -1066,7 +736,7 @@ function Organisation() {
                     autoComplete="off"
                     name="phoneNumber"
                     value={partner.phoneNumber}
-                    onChange={(e) => handlePartnerPhoneChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e, { digits: 10 })}
                     onKeyDown={allowOnlyDigits}
                     onPaste={preventNonDigitPaste}
                     placeholder="Mobile number"
@@ -1080,7 +750,7 @@ function Organisation() {
                     type="text"
                     name="address"
                     value={partner.address}
-                    onChange={(e) => handlePartnerChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e)}
                     placeholder="Member complete address"
                     disabled={!isEditEnabled}
                   />
@@ -1093,7 +763,7 @@ function Organisation() {
                     autoComplete="off"
                     name="pincode"
                     value={partner.pincode || ""}
-                    onChange={(e) => handlePartnerChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e, { digits: 6 })}
                     onKeyDown={allowOnlyDigits}
                     onPaste={preventNonDigitPaste}
                     placeholder="6-digit pincode"
@@ -1106,7 +776,7 @@ function Organisation() {
                     type="checkbox"
                     name="isAuthorized"
                     checked={partner.isAuthorized}
-                    onChange={(e) => handlePartnerChange(idx, e)}
+                    onChange={(e) => handleListChange(setPartners, idx, e)}
                     disabled={!isEditEnabled}
                   />
                   <span>Authorized person?</span>
@@ -1117,11 +787,12 @@ function Organisation() {
           <button
             type="button"
             className="add-more-section-btn"
-            onClick={handleAddMorePartner}
+            onClick={() => setPartners(prev => [...prev, { ...initialPartnerDraft, id: `partner-${Date.now()}` }])}
             disabled={!isEditEnabled}
           >
             + Add Partner / Director
           </button>
+
         </div>
       </div>
 
@@ -1133,7 +804,7 @@ function Organisation() {
             onClick={handleSaveBasicDetails}
             disabled={isSaving || (!isEditEnabled && hasActiveOrganization)}
           >
-            {isSaving ? "Synchronizing..." : isUpdateMode ? "Update" : "Save"}
+            {isUpdateMode ? "Update" : "Save"}
           </button>
           <button
             type="button"
